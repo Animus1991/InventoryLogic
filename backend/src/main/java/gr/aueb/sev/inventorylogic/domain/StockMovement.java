@@ -21,6 +21,9 @@ public class StockMovement {
     @Column(length = 255)
     private String note;
 
+    @Column(length = 64)
+    private String reference;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -33,6 +36,8 @@ public class StockMovement {
     public void setDelta(int delta) { this.delta = delta; }
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+    public String getReference() { return reference; }
+    public void setReference(String reference) { this.reference = reference; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
