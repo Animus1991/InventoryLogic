@@ -1,0 +1,9 @@
+Οδηγίες παραδοτέου (σύμφωνα με εκφώνηση):
+
+1. Ανέβασε το project σε GitHub (δηλαδή δημιούργησε repository και κάνε push τον κώδικα).
+2. Αντίγραψε το πλήρες URL του repository (π.χ. https://github.com/username/InventoryLogic).
+3. Αντικατέστησε την παρακάτω γραμμή με το δικό σου GitHub link και πάτα "Αποθήκευση".
+4. Πάραδος αυτό το αρχείο (DELIVERABLE.txt) ως το παραδοτέο της εργασίας.
+
+GitHub Link:
+https://github.com/ΒΑΛΕ_ΤΟ_LINK_ΣΟΥ

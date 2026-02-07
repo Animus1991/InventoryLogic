@@ -1,0 +1,10 @@
+{
+  "name": "inventorylogic",
+  "private": true,
+  "description": "Ρίζα project: backend (Java) στο backend/, frontend (React) στο frontend/.",
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "install:frontend": "cd frontend && npm install"
+  }
+}
