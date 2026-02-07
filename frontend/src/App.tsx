@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { jsPDF } from 'jspdf'
-import { listProducts, createProduct, updateProduct, deleteProduct, adjustStock, getMovements, getAuditLog, getByBarcode, seedSampleProducts, type Product, type StockMovement, type AuditLog } from './lib/api'
+import { listProducts, createProduct, updateProduct, deleteProduct, adjustStock, getMovements, getAuditLog, getByBarcode, seedSampleProducts, getToken, clearToken, type Product, type StockMovement, type AuditLog } from './lib/api'
 
 function normalizeForSearch(s: string): string {
   return (s || '')
@@ -20,6 +20,7 @@ function matchesSearch(product: Product, query: string): boolean {
 }
 
 function App({ children }: { children?: React.ReactNode }) {
+  const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -253,10 +254,17 @@ function App({ children }: { children?: React.ReactNode }) {
                 Διαχείριση προϊόντων και ποσοτήτων
               </p>
             </div>
-            <nav className="flex gap-4 text-sm font-medium text-slate-600">
+            <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
               <Link to="/" className="hover:text-slate-800">Αρχική</Link>
               <Link to="/order" className="hover:text-slate-800">Τι να παραγγείλω</Link>
               <Link to="/about" className="hover:text-slate-800">Σχετικά</Link>
+              {getToken() ? (
+                <button type="button" onClick={() => { clearToken(); navigate('/login'); }} className="hover:text-slate-800">
+                  Αποσύνδεση
+                </button>
+              ) : (
+                <Link to="/login" className="hover:text-slate-800">Σύνδεση</Link>
+              )}
             </nav>
           </div>
         </div>

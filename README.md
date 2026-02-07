@@ -38,6 +38,7 @@
 ### Άλλα
 - **Δειγματική λίστα:** seed δοκιμαστικών προϊόντων με τιμή, θέση, διαστάσεις, RAL, συσκευασία.
 - **PWA:** υποστήριξη εγκατάστασης ως εφαρμογή (vite-plugin-pwa).
+- **Σύνδεση (JWT):** σελίδα σύνδεσης, JWT token, προστασία endpoints. Demo χρήστης: **admin / admin**.
 
 ---
 
@@ -143,6 +144,7 @@ npm run build
 | DELETE | `/api/products/{id}` | Διαγραφή προϊόντος |
 | POST | `/api/products/{id}/adjust` | Προσαρμογή αποθέματος (body: `delta`, `note`, `reference`) |
 | POST | `/api/products/seed` | Δειγματική λίστα προϊόντων |
+| POST | `/api/auth/login` | Σύνδεση (body: username, password) → { token, username } |
 
 ---
 
