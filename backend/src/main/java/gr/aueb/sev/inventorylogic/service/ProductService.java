@@ -3,17 +3,21 @@ package gr.aueb.sev.inventorylogic.service;
 import gr.aueb.sev.inventorylogic.domain.AuditLog;
 import gr.aueb.sev.inventorylogic.domain.Product;
 import gr.aueb.sev.inventorylogic.domain.StockMovement;
+import gr.aueb.sev.inventorylogic.dto.AdjustStockRequest;
+import gr.aueb.sev.inventorylogic.dto.CreateProductRequest;
+import gr.aueb.sev.inventorylogic.dto.ProductPageResponse;
+import gr.aueb.sev.inventorylogic.dto.UpdateProductRequest;
+import gr.aueb.sev.inventorylogic.exception.InsufficientStockException;
+import gr.aueb.sev.inventorylogic.exception.ProductNotFoundException;
+import gr.aueb.sev.inventorylogic.exception.SkuAlreadyExistsException;
 import gr.aueb.sev.inventorylogic.repo.AuditLogRepo;
 import gr.aueb.sev.inventorylogic.repo.ProductRepo;
 import gr.aueb.sev.inventorylogic.repo.StockMovementRepo;
-import gr.aueb.sev.inventorylogic.dto.AdjustStockRequest;
-import gr.aueb.sev.inventorylogic.dto.CreateProductRequest;
-import gr.aueb.sev.inventorylogic.dto.UpdateProductRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,26 +39,36 @@ public class ProductService {
         return repo.findById(id);
     }
 
-    public List<Product> list(boolean lowStockOnly, String q, Integer page, Integer size) {
-        List<Product> list;
+    public ProductPageResponse list(boolean lowStockOnly, String q, Integer page, Integer size) {
+        Pageable pageable = size != null && size > 0
+                ? PageRequest.of(page != null && page >= 0 ? page : 0, size)
+                : Pageable.unpaged();
+
+        Page<Product> resultPage;
         if (q != null && !q.isBlank()) {
-            Pageable pageable = size != null && size > 0 ? PageRequest.of(page != null && page >= 0 ? page : 0, size) : Pageable.unpaged();
-            list = repo.findByNameContainingIgnoreCaseOrSkuContainingIgnoreCaseOrBarcodeContainingIgnoreCaseOrCategoryContainingIgnoreCase(q, q, q, q, pageable).getContent();
-        } else if (size != null && size > 0) {
-            list = repo.findAll(PageRequest.of(page != null && page >= 0 ? page : 0, size)).getContent();
+            resultPage = repo.findByNameContainingIgnoreCaseOrSkuContainingIgnoreCaseOrBarcodeContainingIgnoreCaseOrCategoryContainingIgnoreCase(
+                    q, q, q, q, pageable);
+        } else if (pageable.isPaged()) {
+            resultPage = repo.findAll(pageable);
         } else {
-            list = repo.findAll();
+            List<Product> all = repo.findAll();
+            if (lowStockOnly) {
+                all = all.stream().filter(p -> p.getMinStock() > 0 && p.getStock() <= p.getMinStock()).toList();
+            }
+            return new ProductPageResponse(all, all.size(), 0, all.size());
         }
+
+        List<Product> items = resultPage.getContent();
         if (lowStockOnly) {
-            return list.stream().filter(p -> p.getMinStock() > 0 && p.getStock() <= p.getMinStock()).toList();
+            items = items.stream().filter(p -> p.getMinStock() > 0 && p.getStock() <= p.getMinStock()).toList();
         }
-        return list;
+        return new ProductPageResponse(items, resultPage.getTotalElements(), resultPage.getNumber(), resultPage.getSize());
     }
 
     @Transactional
     public Product create(CreateProductRequest req) {
         if (repo.existsBySku(req.sku())) {
-            throw new IllegalArgumentException("SKU already exists: " + req.sku());
+            throw new SkuAlreadyExistsException(req.sku());
         }
         Product p = new Product();
         p.setSku(req.sku().trim());
@@ -77,10 +91,10 @@ public class ProductService {
 
     @Transactional
     public Product update(long id, UpdateProductRequest req) {
-        Product p = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+        Product p = repo.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
         if (req.sku() != null && !req.sku().isBlank()) {
             if (repo.existsBySku(req.sku().trim()) && !req.sku().trim().equalsIgnoreCase(p.getSku())) {
-                throw new IllegalArgumentException("SKU already exists: " + req.sku());
+                throw new SkuAlreadyExistsException(req.sku());
             }
             p.setSku(req.sku().trim());
         }
@@ -102,7 +116,7 @@ public class ProductService {
 
     @Transactional
     public void delete(long id) {
-        Product p = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+        Product p = repo.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
         audit("DELETE", id, p.getSku() + " " + p.getName());
         repo.deleteById(id);
     }
@@ -121,9 +135,11 @@ public class ProductService {
 
     @Transactional
     public Product adjustStock(long id, AdjustStockRequest req) {
-        Product p = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+        Product p = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Δεν βρέθηκε προϊόν με id: " + id));
         int newStock = p.getStock() + req.delta();
-        if (newStock < 0) newStock = 0;
+        if (newStock < 0) {
+            throw new InsufficientStockException(p.getSku(), req.delta(), p.getStock());
+        }
         p.setStock(newStock);
         Product saved = repo.save(p);
         StockMovement m = new StockMovement();
@@ -162,9 +178,15 @@ public class ProductService {
         );
         int added = 0;
         for (var req : samples) {
-            if (!repo.existsBySku(req.sku())) {
-                create(req);
-                added++;
+            if (req == null || req.sku() == null || req.sku().isBlank()) continue;
+            try {
+                if (!repo.existsBySku(req.sku())) {
+                    create(req);
+                    added++;
+                }
+            } catch (Exception e) {
+                // Log and skip problematic seeds instead of failing seed process
+                System.err.println("Failed to insert sample product with SKU: " + req.sku() + " - " + e.getMessage());
             }
         }
         return added;

@@ -19,7 +19,7 @@
 Από τη **ρίζα** του project (`InventoryLogic`), στο terminal:
 
 ```powershell
-git remote add origin https://github.com/ΤΟ_USERNAME_ΣΟΥ/InventoryLogic.git
+git remote add origin https://github.com/Animus1991/InventoryLogic.git
 ```
 
 (Άλλαξε `ΤΟ_USERNAME_ΣΟΥ` και το `InventoryLogic` αν διάλεξες άλλο όνομα repo.)

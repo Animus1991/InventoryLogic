@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listProducts, type Product } from '../lib/api'
+import { formatNumber } from '../lib/locale'
 
 export default function OrderListPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -8,7 +9,7 @@ export default function OrderListPage() {
 
   useEffect(() => {
     listProducts({ lowStockOnly: true })
-      .then(setProducts)
+      .then((page) => setProducts(page.items))
       .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
       .finally(() => setLoading(false))
   }, [])
@@ -46,10 +47,10 @@ export default function OrderListPage() {
                   {p.sku && <span className="ml-2 text-sm text-slate-500">{p.sku}</span>}
                 </div>
                 <span className="text-slate-500">
-                  Απόθεμα: {p.stock} / Ελάχ. {p.minStock} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+                  Απόθεμα: {formatNumber(p.stock)} / Ελάχ. {formatNumber(p.minStock)} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
                 </span>
                 <span className="rounded bg-amber-100 px-3 py-1 font-medium text-amber-800">
-                  Προτείνω: +{suggest} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+                  Προτείνω: +{formatNumber(suggest)} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
                 </span>
               </li>
             )

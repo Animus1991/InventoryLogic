@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getProduct, getMovements, getAuditLog, adjustStock, type Product, type StockMovement, type AuditLog } from '../lib/api'
+import { formatCurrency, formatDateTime } from '../lib/locale'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -64,14 +65,14 @@ export default function ProductDetailPage() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-6">
         <p className="text-red-600">Δεν βρέθηκε προϊόν.</p>
-        <Link to="/" className="mt-2 inline-block text-blue-600 hover:underline">← Επιστροφή</Link>
+        <Link to="/products" className="mt-2 inline-block text-blue-600 hover:underline">← Επιστροφή</Link>
       </div>
     )
   }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
-      <Link to="/" className="text-sm text-blue-600 hover:underline">← Επιστροφή στη λίστα</Link>
+      <Link to="/products" className="text-sm text-blue-600 hover:underline">← Επιστροφή στη λίστα</Link>
       {error && (
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
@@ -87,7 +88,7 @@ export default function ProductDetailPage() {
             Απόθεμα: {product.stock} {(product.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
           </span>
           {product.minStock > 0 && <span className="text-sm text-slate-500">Ελάχ. {product.minStock}</span>}
-          {product.price != null && <span className="text-sm text-slate-600">{Number(product.price).toFixed(2)} €</span>}
+          {product.price != null && <span className="text-sm text-slate-600">{formatCurrency(Number(product.price))}</span>}
           {product.location && <span className="text-sm text-slate-500">Θέση: {product.location}</span>}
           {product.colorRal && <span className="text-sm text-slate-500">RAL {product.colorRal}</span>}
           {product.packagingInfo && <span className="text-sm text-slate-500">Συσκ. {product.packagingInfo}</span>}
@@ -146,7 +147,7 @@ export default function ProductDetailPage() {
                   <span className={m.delta >= 0 ? 'font-medium text-emerald-600' : 'font-medium text-red-600'}>{m.delta >= 0 ? '+' : ''}{m.delta}</span>
                   <span className="flex-1 text-slate-500">{m.note || '—'}</span>
                   {m.reference && <span className="text-xs text-slate-500">Αναφ.: {m.reference}</span>}
-                  <span className="text-slate-400">{new Date(m.createdAt).toLocaleString('el-GR')}</span>
+                  <span className="text-slate-400">{formatDateTime(m.createdAt)}</span>
                 </li>
               ))}
             </ul>
@@ -165,7 +166,7 @@ export default function ProductDetailPage() {
                 <li key={a.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
                   <span className="font-medium text-slate-700">{a.action}</span>
                   {a.details && <span className="flex-1 text-slate-500">{a.details}</span>}
-                  <span className="text-slate-400">{new Date(a.createdAt).toLocaleString('el-GR')}</span>
+                  <span className="text-slate-400">{formatDateTime(a.createdAt)}</span>
                 </li>
               ))}
             </ul>

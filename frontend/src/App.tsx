@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { jsPDF } from 'jspdf'
-import { listProducts, createProduct, updateProduct, deleteProduct, adjustStock, getMovements, getAuditLog, getByBarcode, seedSampleProducts, getToken, clearToken, type Product, type StockMovement, type AuditLog } from './lib/api'
+import { getByBarcode, getToken, clearToken, type Product, type StockMovement, type AuditLog } from './lib/api'
+import { useProducts } from './hooks/useProducts'
+import ProductTable from './components/ProductTable'
+import MovementsPanel from './components/MovementsPanel'
 
 function normalizeForSearch(s: string): string {
   return (s || '')
@@ -21,10 +24,6 @@ function matchesSearch(product: Product, query: string): boolean {
 
 function App({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate()
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [lowStockOnly, setLowStockOnly] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -54,35 +53,29 @@ function App({ children }: { children?: React.ReactNode }) {
   const [newColorRal, setNewColorRal] = useState('')
   const [newPackaging, setNewPackaging] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  function load() {
-    setLoading(true)
-    setError(null)
-    listProducts({ lowStockOnly })
-      .then(setProducts)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-      .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    load()
-  }, [lowStockOnly]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  function handleAdjust(id: number, delta: number) {
-    adjustStock(id, delta)
-      .then((updated) => {
-        setProducts((prev) =>
-          prev.map((p) => (p.id === updated.id ? updated : p))
-        )
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-  }
+  const {
+    products,
+    loading,
+    error,
+    setError,
+    submitting,
+    load,
+    handleAdjust,
+    handleCreate: createProductAction,
+    handleUpdate: updateProductAction,
+    handleDelete: deleteProductAction,
+    handleAdjustWithForm: adjustWithFormAction,
+    handleSeed,
+    getMovements,
+    getAuditLog,
+  } = useProducts(lowStockOnly)
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     if (!newSku.trim() || !newName.trim() || submitting) return
-    setSubmitting(true)
-    createProduct({
+    createProductAction({
       sku: newSku.trim(),
       name: newName.trim(),
       category: newCategory.trim() || undefined,
@@ -97,15 +90,15 @@ function App({ children }: { children?: React.ReactNode }) {
       stock: newStock,
       minStock: newMinStock,
     })
-      .then((p) => {
-        setProducts((prev) => [...prev, p])
+      .then(() => {
         setShowForm(false)
         setNewSku(''); setNewName(''); setNewCategory(''); setNewBarcode(''); setNewUnit('τεμάχια'); setNewDescription('')
         setNewPrice(''); setNewLocation(''); setNewDimensions(''); setNewColorRal(''); setNewPackaging('')
         setNewStock(0); setNewMinStock(0)
+        setSuccessMessage('Το προϊόν προστέθηκε')
+        setTimeout(() => setSuccessMessage(null), 3000)
       })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-      .finally(() => setSubmitting(false))
+      .catch(() => {})
   }
 
   function handleShowMovements(productId: number) {
@@ -129,18 +122,15 @@ function App({ children }: { children?: React.ReactNode }) {
     if (adjustProductId == null || adjustDelta === '' || submitting) return
     const delta = Number(adjustDelta)
     if (Number.isNaN(delta) || delta === 0) return
-    setSubmitting(true)
-    adjustStock(adjustProductId, delta, adjustNote.trim() || undefined, adjustReference.trim() || undefined)
-      .then((updated) => {
-        setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+    adjustWithFormAction(adjustProductId, delta, adjustNote.trim() || undefined, adjustReference.trim() || undefined)
+      .then(() => {
         setAdjustProductId(null)
         setAdjustDelta('')
         setAdjustNote('')
         setAdjustReference('')
         if (movementsProductId === adjustProductId) getMovements(adjustProductId).then(setMovements)
       })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-      .finally(() => setSubmitting(false))
+      .catch(() => {})
   }
 
   function handleUpdate(e: React.FormEvent) {
@@ -149,9 +139,8 @@ function App({ children }: { children?: React.ReactNode }) {
     const form = e.currentTarget
     const name = (form.querySelector('[name="editName"]') as HTMLInputElement)?.value?.trim()
     if (!name) return
-    setSubmitting(true)
     const editPrice = (form.querySelector('[name="editPrice"]') as HTMLInputElement)?.value?.trim()
-    updateProduct(editProduct.id, {
+    updateProductAction(editProduct.id, {
       sku: (form.querySelector('[name="editSku"]') as HTMLInputElement)?.value?.trim() || undefined,
       name,
       category: (form.querySelector('[name="editCategory"]') as HTMLInputElement)?.value?.trim() || undefined,
@@ -165,23 +154,18 @@ function App({ children }: { children?: React.ReactNode }) {
       packagingInfo: (form.querySelector('[name="editPackaging"]') as HTMLInputElement)?.value?.trim() || undefined,
       minStock: (form.querySelector('[name="editMinStock"]') as HTMLInputElement)?.value !== '' ? Number((form.querySelector('[name="editMinStock"]') as HTMLInputElement)?.value) : undefined,
     })
-      .then((updated) => {
-        setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+      .then(() => {
         setEditProduct(null)
+        setSuccessMessage('Οι αλλαγές αποθηκεύτηκαν')
+        setTimeout(() => setSuccessMessage(null), 3000)
       })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-      .finally(() => setSubmitting(false))
+      .catch(() => {})
   }
 
   function handleDelete(id: number) {
-    setSubmitting(true)
-    deleteProduct(id)
-      .then(() => {
-        setProducts((prev) => prev.filter((p) => p.id !== id))
-        setDeleteConfirmId(null)
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-      .finally(() => setSubmitting(false))
+    deleteProductAction(id)
+      .then(() => setDeleteConfirmId(null))
+      .catch(() => {})
   }
 
   function exportCsv() {
@@ -226,20 +210,11 @@ function App({ children }: { children?: React.ReactNode }) {
       .catch(() => setScannedProduct(null))
   }
 
-  function handleSeed() {
-    setSubmitting(true)
-    seedSampleProducts()
-      .then((added) => {
-        if (added > 0) load()
-        setError(null)
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
-      .finally(() => setSubmitting(false))
-  }
-
-  const filtered = products.filter((p) => matchesSearch(p, search) && (categoryFilter == null || p.category === categoryFilter))
-  const lowStockList = products.filter((p) => p.minStock > 0 && p.stock <= p.minStock)
-  const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]
+  const productList = products ?? []
+  const filtered = productList.filter((p) => matchesSearch(p, search) && (categoryFilter == null || p.category === categoryFilter))
+  const lowStockList = productList.filter((p) => p.minStock > 0 && p.stock <= p.minStock)
+  const categories = Array.from(new Set(productList.map((p) => p.category).filter(Boolean))) as string[]
+  const handleAdjustWithNote = (p: Product) => setAdjustProductId(p.id)
 
   return (
     <div className="min-h-screen bg-surface">
@@ -254,16 +229,21 @@ function App({ children }: { children?: React.ReactNode }) {
                 Διαχείριση προϊόντων και ποσοτήτων
               </p>
             </div>
-            <nav className="flex items-center gap-4 text-sm font-medium text-slate-600">
-              <Link to="/" className="hover:text-slate-800">Αρχική</Link>
-              <Link to="/order" className="hover:text-slate-800">Τι να παραγγείλω</Link>
-              <Link to="/about" className="hover:text-slate-800">Σχετικά</Link>
+            <nav className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm font-medium text-slate-600">
+              <Link to="/" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Κεντρική οθόνη</Link>
+              <Link to="/products" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Προϊόντα</Link>
+              <Link to="/reports" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Αναφορές</Link>
+              <Link to="/order" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Τι να παραγγείλω</Link>
+              <Link to="/about" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Σχετικά</Link>
               {getToken() ? (
-                <button type="button" onClick={() => { clearToken(); navigate('/login'); }} className="hover:text-slate-800">
+                <button type="button" onClick={() => { clearToken(); navigate('/login', { replace: true }); }} className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">
                   Αποσύνδεση
                 </button>
               ) : (
-                <Link to="/login" className="hover:text-slate-800">Σύνδεση</Link>
+                <>
+                  <Link to="/signup" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Εγγραφή</Link>
+                  <Link to="/login" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">Σύνδεση</Link>
+                </>
               )}
             </nav>
           </div>
@@ -276,11 +256,45 @@ function App({ children }: { children?: React.ReactNode }) {
         <>
       {lowStockList.length > 0 && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm font-medium text-amber-800">
-          ⚠️ {lowStockList.length} προϊόντα με χαμηλό απόθεμα — δείτε «Τι να παραγγείλω» παρακάτω.
+          ⚠️ {lowStockList.length} προϊόντα με χαμηλό απόθεμα — <Link to="/order" className="underline">Τι να παραγγείλω</Link>
         </div>
       )}
 
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6 sm:px-6">
+        {/* Barcode πρώτο (κινητά): σάρωση/πληκτρολόγηση πάνω για γρήγορη χρήση */}
+        <div className="mb-4 order-first rounded-xl border-2 border-blue-200 bg-blue-50/50 p-4 sm:p-3">
+          <p className="mb-2 text-sm font-medium text-slate-700 sm:mb-1">📷 Barcode / QR — σάρωση ή πληκτρολόγηση</p>
+          <div className="flex flex-wrap items-stretch gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              enterKeyHint="search"
+              placeholder="Σάρωσε ή πληκτρολόγησε barcode"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleBarcodeLookup())}
+              className="input-field flex-1 min-w-0"
+            />
+            <button type="button" onClick={handleBarcodeLookup} className="btn-primary shrink-0">
+              Αναζήτηση
+            </button>
+          </div>
+          {scannedProduct && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/80 p-3">
+              <span className="text-sm font-medium text-slate-800">{scannedProduct.name}</span>
+              <span className="text-sm text-slate-500">Απόθεμα: {scannedProduct.stock} {scannedProduct.unit || 'τεμ.'}</span>
+              <Link to={`/product/${scannedProduct.id}`} className="btn-secondary text-sm">Άνοιγμα / Προσαρμογή</Link>
+            </div>
+          )}
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+            <span className="font-medium text-slate-700">Σύνολο προϊόντων: {productList.length}</span>
+            <span className="hidden sm:inline">|</span>
+            <span>Χαμηλό απόθεμα: <strong className="text-amber-700">{lowStockList.length}</strong></span>
+          </div>
+        </div>
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <input
             type="text"
@@ -331,25 +345,6 @@ function App({ children }: { children?: React.ReactNode }) {
             ))}
           </div>
         )}
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <input
-            type="text"
-            placeholder="Barcode / QR (πληκτρολόγηση ή σάρωση)"
-            value={barcodeInput}
-            onChange={(e) => setBarcodeInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleBarcodeLookup())}
-            className="input-field max-w-xs"
-          />
-          <button type="button" onClick={handleBarcodeLookup} className="btn-secondary">
-            Αναζήτηση
-          </button>
-          {scannedProduct && (
-            <span className="text-sm text-slate-500">
-              Βρέθηκε: {scannedProduct.name} (απόθεμα: {scannedProduct.stock} {scannedProduct.unit || 'τεμ.'})
-            </span>
-          )}
-        </div>
-
         {lowStockList.length > 0 && !loading && (
           <div className="card mb-6 border-amber-200 bg-amber-50/30 p-5">
             <h2 className="mb-3 text-base font-semibold text-slate-800">Τι να παραγγείλω</h2>
@@ -369,9 +364,19 @@ function App({ children }: { children?: React.ReactNode }) {
           </div>
         )}
 
+        {successMessage && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+            {successMessage}
+          </div>
+        )}
+
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+          <div className="mb-6 flex items-start justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium">Σφάλμα</p>
+              <p className="mt-0.5">{error}</p>
+            </div>
+            <button type="button" onClick={() => setError(null)} className="shrink-0 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-red-500 hover:bg-red-100" aria-label="Κλείσιμο">×</button>
           </div>
         )}
 
@@ -390,62 +395,20 @@ function App({ children }: { children?: React.ReactNode }) {
         )}
 
         {movementsProductId !== null && (
-          <div className="card mb-6 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-base font-semibold text-slate-800">
-                {showAuditInPanel ? 'Audit log προϊόντος' : 'Ιστορικό κινήσεων'}
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setShowAuditInPanel(false); getMovements(movementsProductId).then(setMovements) }}
-                  className={`text-sm ${!showAuditInPanel ? 'font-medium text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Κινήσεις
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowAuditInPanel(true); getAuditLog(movementsProductId).then(setAuditLog) }}
-                  className={`text-sm ${showAuditInPanel ? 'font-medium text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Audit log
-                </button>
-                <button type="button" onClick={() => setMovementsProductId(null)} className="text-sm text-slate-500 hover:text-slate-700">
-                  Κλείσιμο
-                </button>
-              </div>
-            </div>
-            {showAuditInPanel ? (
-              auditLog.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">Δεν υπάρχουν καταχωρήσεις audit.</p>
-              ) : (
-                <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto text-sm">
-                  {auditLog.map((a) => (
-                    <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2">
-                      <span className="font-medium text-slate-700">{a.action}</span>
-                      {a.details && <span className="flex-1 text-slate-500">{a.details}</span>}
-                      <span className="text-slate-400">{new Date(a.createdAt).toLocaleString('el-GR')}</span>
-                    </li>
-                  ))}
-                </ul>
-              )
-            ) : movements.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-500">Δεν υπάρχουν κινήσεις.</p>
-            ) : (
-              <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto text-sm">
-                {movements.map((m) => (
-                  <li key={m.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
-                    <span className={m.delta >= 0 ? 'font-medium text-emerald-600' : 'font-medium text-red-600'}>
-                      {m.delta >= 0 ? '+' : ''}{m.delta}
-                    </span>
-                    <span className="flex-1 text-slate-500">{m.note || '—'}</span>
-                    {m.reference && <span className="text-xs text-slate-500">Αναφ.: {m.reference}</span>}
-                    <span className="text-slate-400">{new Date(m.createdAt).toLocaleString('el-GR')}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <MovementsPanel
+            showAudit={showAuditInPanel}
+            movements={movements}
+            auditLog={auditLog}
+            onTabMovements={() => {
+              setShowAuditInPanel(false)
+              getMovements(movementsProductId).then(setMovements).catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
+            }}
+            onTabAudit={() => {
+              setShowAuditInPanel(true)
+              getAuditLog(movementsProductId).then(setAuditLog).catch((e) => setError(e instanceof Error ? e.message : 'Σφάλμα'))
+            }}
+            onClose={() => setMovementsProductId(null)}
+          />
         )}
 
         {adjustProductId !== null && (
@@ -518,110 +481,16 @@ function App({ children }: { children?: React.ReactNode }) {
           </form>
         )}
 
-        {loading ? (
-          <div className="card flex items-center justify-center py-12">
-            <p className="text-slate-500">Φόρτωση...</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="card py-12 text-center">
-            <p className="text-slate-500">Δεν βρέθηκαν προϊόντα.</p>
-            <p className="mt-1 text-sm text-slate-400">Προσθέστε νέο προϊόν ή αλλάξτε το φίλτρο αναζήτησης.</p>
-          </div>
-        ) : (
-          <ul className="space-y-4">
-            {filtered.map((p) => (
-              <li
-                key={p.id}
-                className={`card p-5 transition-shadow hover:shadow-cardHover ${
-                  p.stock <= p.minStock && p.minStock > 0
-                    ? 'border-amber-300 bg-amber-50/50'
-                    : ''
-                }`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link to={`/product/${p.id}`} className="font-semibold text-slate-800 hover:text-blue-600 hover:underline">{p.name}</Link>
-                      {p.sku && (
-                        <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                          {p.sku}
-                        </span>
-                      )}
-                      {p.category && (
-                        <span className="text-sm text-slate-500">{p.category}</span>
-                      )}
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                        Απόθεμα: {p.stock} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
-                      </span>
-                      {p.price != null && <span className="text-sm text-slate-600">{Number(p.price).toFixed(2)} €</span>}
-                      {p.location && <span className="text-xs text-slate-500">Θέση: {p.location}</span>}
-                      {p.colorRal && <span className="text-xs text-slate-500">RAL {p.colorRal}</span>}
-                      {p.packagingInfo && <span className="text-xs text-slate-500">Συσκ. {p.packagingInfo}</span>}
-                      {p.barcode && <span className="text-xs text-slate-400">Barcode: {p.barcode}</span>}
-                      {p.minStock > 0 && <span className="text-sm text-slate-500">ελάχ. {p.minStock}</span>}
-                      {p.stock <= p.minStock && p.minStock > 0 && (
-                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Χαμηλό απόθεμα</span>
-                      )}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-3">
-                      <button type="button" onClick={() => setEditProduct(p)} className="text-sm font-medium text-blue-600 hover:text-blue-700">Επεξεργασία</button>
-                      <button type="button" onClick={() => handleShowMovements(p.id)} className="text-sm text-slate-500 hover:text-slate-700">Ιστορικό</button>
-                      <button type="button" onClick={() => handleShowAudit(p.id)} className="text-sm text-slate-500 hover:text-slate-700">Audit</button>
-                      <button type="button" onClick={() => setAdjustProductId(p.id)} className="text-sm text-slate-500 hover:text-slate-700">Προσαρμογή με σημείωση</button>
-                      <button type="button" onClick={() => setDeleteConfirmId(p.id)} className="text-sm text-red-600 hover:text-red-700">Διαγραφή</button>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleAdjust(p.id, -10)}
-                      className="rounded-lg bg-red-100 px-2.5 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200"
-                    >
-                      −10
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAdjust(p.id, -5)}
-                      className="rounded-lg bg-red-50 px-2.5 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100"
-                    >
-                      −5
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAdjust(p.id, -1)}
-                      className="rounded-lg bg-red-50/80 px-2.5 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100"
-                    >
-                      −1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAdjust(p.id, 1)}
-                      className="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
-                    >
-                      +1
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAdjust(p.id, 5)}
-                      className="rounded-lg bg-emerald-100 px-2.5 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-200"
-                    >
-                      +5
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAdjust(p.id, 10)}
-                      className="rounded-lg bg-emerald-200 px-2.5 py-1.5 text-sm font-medium text-emerald-800 hover:bg-emerald-300"
-                    >
-                      +10
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ProductTable
+          products={filtered}
+          loading={loading}
+          onAdjust={handleAdjust}
+          onEdit={setEditProduct}
+          onShowMovements={handleShowMovements}
+          onShowAudit={handleShowAudit}
+          onAdjustWithNote={handleAdjustWithNote}
+          onDelete={setDeleteConfirmId}
+        />
       </main>
         </>
       )}

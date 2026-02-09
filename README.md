@@ -1,60 +1,66 @@
 # InventoryLogic — Αποθήκη / Εμπόρευμα
 
-Φοιτητική εργασία: σύστημα διαχείρισης αποθήκης (αλουμίνιο/σιδήρας) με **Java Spring Boot** (REST API), **React** (Vite), **Tailwind CSS** και **MySQL**.
+Σύστημα διαχείρισης αποθήκης (αλουμίνιο, σίδηρας ή οποιαδήποτε εμπόρευμα) με **Java Spring Boot** (REST API), **React** (Vite), **Tailwind CSS** και **MySQL**. Σχεδιασμένο για **κινητά πρώτα** (mobile-first): σάρωση barcode από υπαλλήλους στα ράφια, γρήγορη καταχώρηση με λίγα κλικ, PWA εγκατάσταση.
 
-**Για να τρέξεις και να δεις το UI στο browser:** δες το αρχείο **[ΤΡΕΞΙΜΟ.md](ΤΡΕΞΙΜΟ.md)**.
+**Για τρέξιμο και προβολή στο browser:** δες **[ΤΡΕΞΙΜΟ.md](ΤΡΕΞΙΜΟ.md)**.
 
 ---
 
 ## Τι κάνει η εφαρμογή
 
+### Κεντρική οθόνη (Dashboard)
+- **KPI:** σύνολο προϊόντων, προϊόντα χαμηλού αποθέματος, συνολική αξία αποθέματος (€), κινήσεις τελευταίων 7 ημερών.
+- Σύντομο μπλοκ «Τι να παραγγείλω» με link στη λίστα παραγγελίας.
+
 ### Διαχείριση προϊόντων
 - **Λίστα προϊόντων** με SKU, όνομα, κατηγορία, barcode, μονάδα, τρέχουσα ποσότητα, ελάχιστο όριο.
 - **Επεκτεταμένα πεδία:** τιμή, θέση αποθήκης (location), διαστάσεις, χρώμα RAL, συσκευασία.
-- **Νέο προϊόν** και **επεξεργασία** (PATCH) υπαρχόντων με όλα τα πεδία.
+- **Νέο προϊόν** και **επεξεργασία** (PATCH) με όλα τα πεδία.
 - **Διαγραφή** με επιβεβαίωση.
 
 ### Αποθέματα & κινήσεις
-- **Γρήγορη αλλαγή ποσότητας:** κουμπιά +1, +5, +10 και −1, −5, −10.
-- **Ιστορικό κινήσεων** ανά προϊόν (με σημείωση και προαιρετική αναφορά τιμολογίου/παραγγελίας).
-- **Audit log:** καταγραφή δημιουργίας, ενημέρωσης, διαγραφής και προσαρμογής αποθέματος ανά προϊόν.
+- **Γρήγορη αλλαγή ποσότητας:** κουμπιά +1, +5, +10 και −1, −5, −10 (touch-friendly).
+- **Προσαρμογή με σημείωση/αναφορά** (τιμολόγιο/παραγγελία).
+- **Ιστορικό κινήσεων** και **Audit log** ανά προϊόν.
+
+### Barcode / QR (κεντρικό για κινητά)
+- **Πληκτρολόγηση ή σάρωση** barcode — άμεση αναζήτηση και εμφάνιση προϊόντος με γρήγορη προσαρμογή αποθέματος.
+- Βελτιστοποίηση για χρήση από κινητό (μικρά κλικ, μεγάλα κουμπιά).
 
 ### Αναζήτηση & φίλτρα
-- **Αναζήτηση** (όνομα, SKU, barcode, κατηγορία) με ανοχή σε τόνους (EL/EN).
-- **Φίλτρο «Μόνο χαμηλό απόθεμα».**
-- **Φίλτρο κατηγορίας:** chips (Όλες + μία κατηγορία για κάθε τιμή).
+- Αναζήτηση (όνομα, SKU, barcode, κατηγορία) με ανοχή τόνων (EL/EN).
+- Φίλτρο «Μόνο χαμηλό απόθεμα» και φίλτρο κατηγορίας (chips).
 
-### Barcode / QR
-- **Πληκτρολόγηση ή σάρωση** barcode — αναζήτηση προϊόντος με εμφάνιση αποτελέσματος.
-
-### Ειδοποιήσεις & αναφορές
-- **Badge χαμηλού αποθέματος** στην κορυφή όταν υπάρχουν προϊόντα κάτω από το ελάχιστο.
-- **«Τι να παραγγείλω»:** λίστα προϊόντων με stock ≤ minStock και προτεινόμενη ποσότητα παραγγελίας.
+### Αναφορές
+- **Αναφορά αποτίμησης αποθέματος:** αξία ανά προϊόν (ποσότητα × τιμή), συνολική αξία (el-GR €).
+- **Τι να παραγγείλω:** λίστα προϊόντων με stock ≤ minStock και προτεινόμενη ποσότητα.
 
 ### Export
-- **Export CSV** της τρέχουσας λίστας (με φίλτρα).
-- **Export PDF** λίστας προϊόντων (landscape A4, jsPDF).
+- **Export CSV** και **Export PDF** λίστας προϊόντων (με φίλτρα).
 
-### Άλλα
-- **Δειγματική λίστα:** seed δοκιμαστικών προϊόντων με τιμή, θέση, διαστάσεις, RAL, συσκευασία.
-- **PWA:** υποστήριξη εγκατάστασης ως εφαρμογή (vite-plugin-pwa).
-- **Σύνδεση (JWT):** σελίδα σύνδεσης, JWT token, προστασία endpoints. Demo χρήστης: **admin / admin**.
+### Πλοήγηση & locale
+- **Μενού:** Κεντρική οθόνη, Προϊόντα, Αναφορές, Τι να παραγγείλω, Σχετικά.
+- **Ελληνική μορφή:** ημερομηνίες, αριθμοί και νόμισμα (€) παντού (el-GR).
+
+### Τεχνολογία & UX
+- **PWA:** εγκατάσταση ως εφαρμογή (vite-plugin-pwa), standalone, theme/background.
+- **Responsive:** mobile-first, λειτουργία σε κινητά και desktop.
+- **JWT σύνδεση/εγγραφή:** Σύνδεση (email ή username), Εγγραφή. Demo: **admin@inventory.local** / **admin12** (ρύθμιση στο `application.properties` ή env).
 
 ---
 
 ## Απαιτήσεις
 
 - **JDK 21**
-- **Maven** (ή χρήση του `mvnw` που περιλαμβάνεται)
-- **Node.js** (LTS, για το frontend)
+- **Maven** (ή `mvnw` στο project)
+- **Node.js** (LTS, για frontend)
 - **MySQL Server** (π.χ. 8.x)
 
 ---
 
 ## Βάση δεδομένων (MySQL)
 
-1. Συνδέσου στο MySQL (Workbench ή κονσόλα).
-2. Δημιούργησε τη βάση:
+1. Δημιούργησε τη βάση:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS inventory_app
@@ -62,71 +68,45 @@ CREATE DATABASE IF NOT EXISTS inventory_app
   DEFAULT COLLATE utf8mb4_0900_ai_ci;
 ```
 
-3. Στο project, άνοιξε `backend/src/main/resources/application.properties` και βάλε το **username** και **password** του MySQL:
+2. Ρύθμισε **backend/src/main/resources/application.properties**:
 
 ```properties
 spring.datasource.username=root
 spring.datasource.password=ΤΟ_ΚΩΔΙΚΟ_ΣΟΥ
 ```
 
+Όλες οι παράμετροι (URL, port, JWT, CORS, demo admin) περιγράφονται στο **[REST_API_KAI_BASI.md](REST_API_KAI_BASI.md)**.
+
 ---
 
 ## Build & τρέξιμο
 
-Η δομή είναι δύο φάκελοι: **backend** (Java/Maven) και **frontend** (React/Vite).
-
 ### Backend (Java)
 
-Όλες οι εντολές από τον φάκελο **backend**:
+Από τον φάκελο **backend**:
 
 ```bash
 cd backend
 ./mvnw clean package
 ```
 
-**Windows (PowerShell):** `cd backend` μετά `.\mvnw.cmd clean package`
-
-- **Run:**
-
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
 **Windows (PowerShell):** `cd backend` μετά `.\mvnw.cmd spring-boot:run`
 
-Ή τρέξε από το IntelliJ την κλάση `gr.aueb.sev.inventorylogic.InventoryLogicApplication` (με working directory το **backend**).
-
-- Το API τρέχει στο **http://localhost:8080**
-- **Swagger UI:** **http://localhost:8080/swagger-ui.html**
+- Το API τρέχει στο **http://localhost:8081** (`server.port=8081` στο `application.properties`).
+- **Swagger UI:** http://localhost:8081/swagger-ui.html
 
 ### Frontend (React + Vite + Tailwind)
 
-**Από ρίζα project** (`InventoryLogic`):
-
-- **Πρώτη φορά** — εγκατάσταση dependencies:
+Από ρίζα project:
 
 ```bash
-npm run install:frontend
-```
-
-ή χειροκίνητα: `cd frontend` και `npm install`.
-
-- **Τρέξιμο σε λειτουργία ανάπτυξης:**
-
-```bash
+npm run install:frontend   # πρώτη φορά
 npm run dev
 ```
 
-Η εφαρμογή ανοίγει στο **http://localhost:5173**. Ο browser μιλάει με το backend μέσω proxy (κλήσεις στο `/api` → `localhost:8080`).
+Η εφαρμογή ανοίγει στο **http://localhost:5173**. Ο browser μιλάει με το backend μέσω proxy (`/api` → `localhost:8081`).
 
-- **Production build** (από ρίζα ή από `frontend/`):
-
-```bash
-npm run build
-```
-
-Αν είσαι μέσα στο `frontend/`: `npm run build`. Τα αρχεία βγαίνουν στο `frontend/dist/`.
+- **Production build:** `npm run build` (από ρίζα ή `frontend/`). Έξοδος: **frontend/dist/**.
 
 ---
 
@@ -134,39 +114,59 @@ npm run build
 
 | Method | Endpoint | Περιγραφή |
 |--------|----------|-----------|
-| GET | `/api/products` | Λίστα προϊόντων. Query: `lowStockOnly`, `q`, `page`, `size` |
+| GET | `/api/products` | Λίστα. Query: `lowStockOnly`, `q`, `page`, `size` |
 | GET | `/api/products/{id}` | Ένα προϊόν |
 | GET | `/api/products/by-barcode?code=...` | Αναζήτηση με barcode |
 | GET | `/api/products/{id}/movements` | Ιστορικό κινήσεων |
-| GET | `/api/products/{id}/audit` | Audit log προϊόντος |
-| POST | `/api/products` | Δημιουργία προϊόντος |
-| PATCH | `/api/products/{id}` | Ενημέρωση προϊόντος |
-| DELETE | `/api/products/{id}` | Διαγραφή προϊόντος |
-| POST | `/api/products/{id}/adjust` | Προσαρμογή αποθέματος (body: `delta`, `note`, `reference`) |
-| POST | `/api/products/seed` | Δειγματική λίστα προϊόντων |
-| POST | `/api/auth/login` | Σύνδεση (body: username, password) → { token, username } |
+| GET | `/api/products/{id}/audit` | Audit log |
+| POST | `/api/products` | Δημιουργία |
+| PATCH | `/api/products/{id}` | Ενημέρωση |
+| DELETE | `/api/products/{id}` | Διαγραφή |
+| POST | `/api/products/{id}/adjust` | Προσαρμογή αποθέματος (`delta`, `note`, `reference`) |
+| POST | `/api/products/seed` | Δειγματική λίστα |
+| **GET** | **`/api/dashboard/stats`** | **Στατιστικά κεντρικής οθόνης** |
+| **GET** | **`/api/reports/valuation`** | **Αναφορά αποτίμησης αποθέματος** |
+| POST | `/api/auth/login` | Σύνδεση → `{ token, username, email }` |
+| POST | `/api/auth/register` | Εγγραφή → 201 `{ token, username, email }` |
+
+Λεπτομέρειες και παράμετροι σύνδεσης/βάσης: **[REST_API_KAI_BASI.md](REST_API_KAI_BASI.md)**.
+
+---
+
+## Ρυθμίσεις (παράμετροι)
+
+| Παράμετρος | Default | Περιγραφή |
+|------------|---------|-----------|
+| `server.port` | 8081 | Port backend |
+| `spring.datasource.url` | jdbc:mysql://localhost:3306/inventory_app?... | URL MySQL |
+| `app.cors.allowed-origins` | http://localhost:5173, ... | CORS (πρόσθεσε production domain) |
+| `jwt.secret` | (μήκος ≥32) | Αλλάξτε σε production |
+| `admin.user` / `admin.password` | admin@inventory.local / admin12 | Demo admin (env: ADMIN_USER, ADMIN_PASSWORD) |
 
 ---
 
 ## Deploy (production)
 
-1. **Βάση:** Δημιούργησε `inventory_app` στο MySQL και ρύθμισε `backend/.../application.properties`.
-2. **Backend:** `cd backend`, `.\mvnw.cmd clean package`, μετά `java -jar target/InventoryLogic-0.0.1-SNAPSHOT.jar`. Το API τρέχει στο port 8080.
-3. **Frontend:** από ρίζα `npm run build`. Τα αρχεία στο `frontend/dist/` σερβίρονται με web server (π.χ. nginx) ή static hosting. Ο browser πρέπει να έχει πρόσβαση στο ίδιο backend (ίδιο domain ή CORS/base URL).
+1. **Βάση:** Δημιούργησε `inventory_app` και ρύθμισε `application.properties` (URL, username, password).
+2. **Backend:** `cd backend`, `.\mvnw.cmd clean package`, `java -jar target/InventoryLogic-0.0.1-SNAPSHOT.jar`. Αλλάξτε `jwt.secret` και demo admin.
+3. **Frontend:** `npm run build`. Σερβίρετε το **frontend/dist/** με nginx/Apache. Ρύθμισε `app.cors.allowed-origins` για το domain του frontend.
+4. **Κινητά:** Χρηστές μπορούν να εγκαταστήσουν την εφαρμογή ως PWA από το URL του frontend.
 
 ---
 
 ## Δομή project
 
-- **backend/** — Java Spring Boot (Maven)
-  - `src/main/java/gr/aueb/sev/inventorylogic/`: `domain/`, `dto/`, `repo/`, `service/`, `web/`
-  - Entities: Product, StockMovement, AuditLog
-  - REST: `/api/products`, `/adjust`, `/movements`, `/audit`, `/by-barcode`, `/seed`
-- **frontend/** — React + Vite + Tailwind, κλήσεις στο `/api`
-- **package.json** (ρίζα) — scripts `build`, `dev`, `install:frontend` που καλούν το frontend
+- **backend/** — Spring Boot (Maven)
+  - `domain/`: Product, StockMovement, AuditLog, User
+  - `dto/`: CreateProductRequest, DashboardStats, ValuationReport, ...
+  - `repo/`, `service/`, `web/`: ProductController, DashboardController, ReportController, AuthController
+- **frontend/** — React + Vite + Tailwind, PWA
+  - Σελίδες: Dashboard, Προϊόντα, Αναφορές, Τι να παραγγείλω, Σχετικά, Λεπτομέρεια προϊόντος, Σύνδεση/Εγγραφή
+- **docs/** — Πλάνο αναβάθμισης (π.χ. docs/ΠΛΑΝΟ_ΑΝΑΒΑΘΜΙΣΗΣ.md)
+- **package.json** (ρίζα) — scripts: `build`, `dev`, `install:frontend`
 
 ---
 
 ## GitHub
 
-Το παραδοτέο περιλαμβάνει το **GitHub link** του repository, σύμφωνα με τις οδηγίες της εργασίας.
+Το repository και οι οδηγίες για δημιουργία/σύνδεση και push: **[GITHUB.md](GITHUB.md)**.

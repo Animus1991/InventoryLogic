@@ -19,12 +19,34 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String login(String username, String password) {
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Λάθος username ή password"));
+    /** Login with email or username. */
+    public String login(String emailOrUsername, String password) {
+        boolean isEmail = emailOrUsername.contains("@");
+        User user = isEmail
+                ? userRepo.findByEmail(emailOrUsername.trim()).orElseThrow(() -> new IllegalArgumentException("Λάθος email ή κωδικός"))
+                : userRepo.findByUsername(emailOrUsername.trim()).orElseThrow(() -> new IllegalArgumentException("Λάθος username ή κωδικός"));
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Λάθος username ή password");
+            throw new IllegalArgumentException("Λάθος email/username ή κωδικός");
         }
         return jwtUtil.generateToken(user.getUsername());
+    }
+
+    public User findByEmailOrUsername(String emailOrUsername) {
+        return emailOrUsername.contains("@")
+                ? userRepo.findByEmail(emailOrUsername.trim().toLowerCase()).orElseThrow()
+                : userRepo.findByUsername(emailOrUsername.trim()).orElseThrow();
+    }
+
+    public User register(String email, String username, String password) {
+        email = email.trim().toLowerCase();
+        username = username.trim();
+        if (userRepo.existsByEmail(email)) {
+            throw new IllegalArgumentException("Η διεύθυνση email χρησιμοποιείται ήδη");
+        }
+        if (userRepo.existsByUsername(username)) {
+            throw new IllegalArgumentException("Το username χρησιμοποιείται ήδη");
+        }
+        User user = new User(email, username, passwordEncoder.encode(password));
+        return userRepo.save(user);
     }
 }
