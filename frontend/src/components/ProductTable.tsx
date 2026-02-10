@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '../lib/api'
 import { formatCurrency } from '../lib/locale'
+import { useI18n } from '../contexts/I18nContext'
 
 type Props = {
   products: Product[]
@@ -23,18 +24,19 @@ export default function ProductTable({
   onAdjustWithNote,
   onDelete,
 }: Props) {
+  const { t } = useI18n()
   if (loading) {
     return (
       <div className="card flex items-center justify-center py-12">
-        <p className="text-slate-500">Φόρτωση...</p>
+        <p className="text-slate-500">{t('common.loading')}</p>
       </div>
     )
   }
   if (products.length === 0) {
     return (
       <div className="card py-12 text-center">
-        <p className="text-slate-500">Δεν βρέθηκαν προϊόντα.</p>
-        <p className="mt-1 text-sm text-slate-400">Προσθέστε νέο προϊόν ή αλλάξτε το φίλτρο αναζήτησης.</p>
+        <p className="text-slate-500">{t('table.noProducts')}</p>
+        <p className="mt-1 text-sm text-slate-400">{t('table.addOrFilter')}</p>
       </div>
     )
   }
@@ -63,37 +65,37 @@ export default function ProductTable({
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                  Απόθεμα: {p.stock} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+                  {t('product.stock')}: {p.stock} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
                 </span>
                 {p.price != null && (
                   <span className="text-sm text-slate-600">{formatCurrency(Number(p.price))}</span>
                 )}
-                {p.location && <span className="text-xs text-slate-500">Θέση: {p.location}</span>}
-                {p.colorRal && <span className="text-xs text-slate-500">RAL {p.colorRal}</span>}
-                {p.packagingInfo && <span className="text-xs text-slate-500">Συσκ. {p.packagingInfo}</span>}
-                {p.barcode && <span className="text-xs text-slate-400">Barcode: {p.barcode}</span>}
-                {p.minStock > 0 && <span className="text-sm text-slate-500">ελάχ. {p.minStock}</span>}
+                {p.location && <span className="text-xs text-slate-500">{t('product.locationShort')}: {p.location}</span>}
+                {p.colorRal && <span className="text-xs text-slate-500">{t('product.ralLabel')} {p.colorRal}</span>}
+                {p.packagingInfo && <span className="text-xs text-slate-500">{t('product.packagingShort')} {p.packagingInfo}</span>}
+                {p.barcode && <span className="text-xs text-slate-400">{t('product.barcodeLabel')}: {p.barcode}</span>}
+                {p.minStock > 0 && <span className="text-sm text-slate-500">{t('product.minShort')} {p.minStock}</span>}
                 {p.stock <= p.minStock && p.minStock > 0 && (
                   <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                    Χαμηλό απόθεμα
+                    {t('table.lowStock')}
                   </span>
                 )}
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={() => onEdit(p)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-700">
-                  Επεξεργασία
+                  {t('table.edit')}
                 </button>
                 <button type="button" onClick={() => onShowMovements(p.id)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-                  Ιστορικό
+                  {t('table.movements')}
                 </button>
                 <button type="button" onClick={() => onShowAudit(p.id)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-                  Audit
+                  {t('table.audit')}
                 </button>
                 <button type="button" onClick={() => onAdjustWithNote(p)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-                  Προσαρμογή με σημείωση
+                  {t('table.adjustWithNote')}
                 </button>
                 <button type="button" onClick={() => onDelete(p.id)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700">
-                  Διαγραφή
+                  {t('table.delete')}
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import type { StockMovement, AuditLog } from '../lib/api'
 import { formatDateTime } from '../lib/locale'
+import { useI18n } from '../contexts/I18nContext'
 
 type Props = {
   showAudit: boolean
@@ -18,11 +19,12 @@ export default function MovementsPanel({
   onTabAudit,
   onClose,
 }: Props) {
+  const { t } = useI18n()
   return (
     <div className="card mb-6 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold text-slate-800">
-          {showAudit ? 'Audit log προϊόντος' : 'Ιστορικό κινήσεων'}
+          {showAudit ? t('panel.audit') : t('panel.movements')}
         </h2>
         <div className="flex items-center gap-2">
           <button
@@ -30,23 +32,23 @@ export default function MovementsPanel({
             onClick={onTabMovements}
             className={`text-sm ${!showAudit ? 'font-medium text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Κινήσεις
+            {t('product.tabMovements')}
           </button>
           <button
             type="button"
             onClick={onTabAudit}
             className={`text-sm ${showAudit ? 'font-medium text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Audit log
+            {t('product.tabAudit')}
           </button>
           <button type="button" onClick={onClose} className="text-sm text-slate-500 hover:text-slate-700">
-            Κλείσιμο
+            {t('panel.close')}
           </button>
         </div>
       </div>
       {showAudit ? (
         auditLog.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">Δεν υπάρχουν καταχωρήσεις audit.</p>
+          <p className="mt-3 text-sm text-slate-500">{t('panel.noAudit')}</p>
         ) : (
           <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto text-sm">
             {auditLog.map((a) => (
@@ -59,7 +61,7 @@ export default function MovementsPanel({
           </ul>
         )
       ) : movements.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">Δεν υπάρχουν κινήσεις.</p>
+        <p className="mt-3 text-sm text-slate-500">{t('product.noMovements')}</p>
       ) : (
         <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto text-sm">
           {movements.map((m) => (
@@ -68,7 +70,7 @@ export default function MovementsPanel({
                 {m.delta >= 0 ? '+' : ''}{m.delta}
               </span>
               <span className="flex-1 text-slate-500">{m.note || '—'}</span>
-              {m.reference && <span className="text-xs text-slate-500">Αναφ.: {m.reference}</span>}
+              {m.reference && <span className="text-xs text-slate-500">{t('common.reference')}: {m.reference}</span>}
               <span className="text-slate-400">{formatDateTime(m.createdAt)}</span>
             </li>
           ))}

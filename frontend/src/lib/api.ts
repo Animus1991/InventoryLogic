@@ -133,13 +133,18 @@ export interface Product {
   name: string;
   category: string | null;
   barcode: string | null;
+  qrCode: string | null;
   unit: string | null;
   description: string | null;
+  manufacturerTerm: string | null;
+  localSlang: string | null;
   price: number | null;
   location: string | null;
   dimensions: string | null;
   colorRal: string | null;
   packagingInfo: string | null;
+  supplier: string | null;
+  internalNotes: string | null;
   stock: number;
   minStock: number;
 }
@@ -180,13 +185,18 @@ export async function createProduct(data: {
   name: string;
   category?: string;
   barcode?: string;
+  qrCode?: string;
   unit?: string;
   description?: string;
+  manufacturerTerm?: string;
+  localSlang?: string;
   price?: number | null;
   location?: string;
   dimensions?: string;
   colorRal?: string;
   packagingInfo?: string;
+  supplier?: string;
+  internalNotes?: string;
   stock: number;
   minStock: number;
 }): Promise<Product> {
@@ -201,7 +211,7 @@ export async function createProduct(data: {
 
 export async function updateProduct(
   id: number,
-  data: { sku?: string; name?: string; category?: string; barcode?: string; unit?: string; description?: string; price?: number | null; location?: string; dimensions?: string; colorRal?: string; packagingInfo?: string; minStock?: number }
+  data: { sku?: string; name?: string; category?: string; barcode?: string; qrCode?: string; unit?: string; description?: string; manufacturerTerm?: string; localSlang?: string; price?: number | null; location?: string; dimensions?: string; colorRal?: string; packagingInfo?: string; supplier?: string; internalNotes?: string; minStock?: number }
 ): Promise<Product> {
   const r = await apiFetch(`${API}/products/${id}`, {
     method: 'PATCH',
@@ -264,6 +274,32 @@ export async function getMovements(productId: number): Promise<StockMovement[]> 
 export async function seedSampleProducts(): Promise<number> {
   const r = await apiFetch(`${API}/products/seed`, { method: 'POST' });
   if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+export interface ImportResult {
+  created: number;
+  updated: number;
+  errors: string[];
+}
+
+export async function importProductsCsv(file: File): Promise<ImportResult> {
+  const form = new FormData();
+  form.append('file', file);
+  const token = localStorage.getItem('inventory_token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(`${API}/products/import`, {
+    method: 'POST',
+    headers,
+    body: form,
+  });
+  if (r.status === 401) {
+    localStorage.removeItem('inventory_token');
+    window.dispatchEvent(new CustomEvent('inventory:auth-required'));
+    throw new Error('Η σύνδεση έληξε. Συνδεθείτε ξανά.');
+  }
+  if (!r.ok) throw new Error(await parseApiError(r));
   return r.json();
 }
 

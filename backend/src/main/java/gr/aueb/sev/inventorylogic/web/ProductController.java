@@ -5,12 +5,14 @@ import gr.aueb.sev.inventorylogic.domain.Product;
 import gr.aueb.sev.inventorylogic.domain.StockMovement;
 import gr.aueb.sev.inventorylogic.dto.AdjustStockRequest;
 import gr.aueb.sev.inventorylogic.dto.CreateProductRequest;
+import gr.aueb.sev.inventorylogic.dto.ImportResult;
 import gr.aueb.sev.inventorylogic.dto.ProductPageResponse;
 import gr.aueb.sev.inventorylogic.dto.UpdateProductRequest;
 import gr.aueb.sev.inventorylogic.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -81,5 +83,26 @@ public class ProductController {
     @PostMapping("/seed")
     public int seed() {
         return service.seedSampleProducts();
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<ImportResult> importFile(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            byte[] bytes = file.getBytes();
+            String name = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+            ImportResult result;
+            if (name.endsWith(".xlsx") || name.endsWith(".xls") || (bytes.length > 4 && bytes[0] == (byte) 0xD0 && bytes[1] == (byte) 0xCF)) {
+                result = service.importFromExcel(bytes);
+            } else {
+                result = service.importFromCsv(bytes);
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new ImportResult(0, 0, List.of("Σφάλμα: " + e.getMessage())));
+        }
     }
 }

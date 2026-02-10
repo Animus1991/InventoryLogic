@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { login, register, setToken, getToken } from '../lib/api'
+import { useI18n } from '../contexts/I18nContext'
 
 type Mode = 'login' | 'signup'
 
 export default function AuthPage() {
+  const { t } = useI18n()
   const location = useLocation()
   const mode: Mode = location.pathname === '/signup' ? 'signup' : 'login'
 
@@ -37,7 +39,7 @@ export default function AuthPage() {
       setToken(data.token)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Σφάλμα σύνδεσης')
+      setError(err instanceof Error ? err.message : t('auth.loginError'))
     } finally {
       setSubmitting(false)
     }
@@ -47,16 +49,16 @@ export default function AuthPage() {
     e.preventDefault()
     if (!email.trim() || !username.trim() || !password || submitting) return
     if (password.length < 6) {
-      setError('Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες')
+      setError(t('auth.passwordMin'))
       return
     }
     if (password !== confirmPassword) {
-      setError('Οι κωδικοί δεν ταιριάζουν')
+      setError(t('auth.passwordMismatch'))
       return
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email.trim())) {
-      setError('Μη έγκυρη διεύθυνση email')
+      setError(t('auth.invalidEmail'))
       return
     }
     setError(null)
@@ -65,10 +67,10 @@ export default function AuthPage() {
     try {
       const data = await register(email.trim().toLowerCase(), username.trim(), password)
       setToken(data.token)
-      setSuccess('Ο λογαριασμός δημιουργήθηκε. Ανακατεύθυνση...')
+      setSuccess(t('auth.accountCreated'))
       setTimeout(() => navigate('/', { replace: true }), 800)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Αποτυχία εγγραφής')
+      setError(err instanceof Error ? err.message : t('auth.signupFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -85,7 +87,7 @@ export default function AuthPage() {
                 mode === 'login' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-800'
               }`}
             >
-              Σύνδεση
+              {t('auth.login')}
             </Link>
             <Link
               to="/signup"
@@ -93,22 +95,22 @@ export default function AuthPage() {
                 mode === 'signup' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-800'
               }`}
             >
-              Εγγραφή
+              {t('auth.signup')}
             </Link>
           </div>
 
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-5">
-              <h1 className="text-xl font-bold text-slate-800">Καλώς ήρθες πάλι</h1>
+              <h1 className="text-xl font-bold text-slate-800">{t('auth.welcomeBack')}</h1>
               {error && (
                 <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm" role="alert">
-                  <p className="font-medium">Σφάλμα σύνδεσης</p>
+                  <p className="font-medium">{t('auth.loginError')}</p>
                   <p className="mt-1">{error}</p>
                 </div>
               )}
               <div>
                 <label htmlFor="login-id" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Email ή username
+                  {t('auth.emailOrUsername')}
                 </label>
                 <input
                   id="login-id"
@@ -123,7 +125,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Κωδικός
+                  {t('auth.password')}
                 </label>
                 <input
                   id="login-password"
@@ -136,11 +138,11 @@ export default function AuthPage() {
                 />
               </div>
               <button type="submit" className="btn-primary w-full py-3" disabled={submitting}>
-                {submitting ? 'Σύνδεση...' : 'Σύνδεση'}
+                {submitting ? t('common.loading') : t('auth.login')}
               </button>
               <p className="text-center text-xs text-slate-500">
                 <button type="button" onClick={() => alert('Επικοινωνήστε με το διαχειριστή για επαναφορά κωδικού.')} className="text-blue-600 hover:underline">
-                  Ξέχασα τον κωδικό
+                  {t('auth.forgotPassword')}
                 </button>
               </p>
               <p className="text-center text-sm text-slate-500">
@@ -149,10 +151,10 @@ export default function AuthPage() {
             </form>
           ) : (
             <form onSubmit={handleSignup} className="space-y-5">
-              <h1 className="text-xl font-bold text-slate-800">Δημιουργία λογαριασμού</h1>
+              <h1 className="text-xl font-bold text-slate-800">{t('auth.createAccount')}</h1>
               {error && (
                 <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm" role="alert">
-                  <p className="font-medium">Σφάλμα εγγραφής</p>
+                  <p className="font-medium">{t('auth.signupError')}</p>
                   <p className="mt-1">{error}</p>
                 </div>
               )}
@@ -163,7 +165,7 @@ export default function AuthPage() {
               )}
               <div>
                 <label htmlFor="signup-email" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Email
+                  {t('auth.email')}
                 </label>
                 <input
                   id="signup-email"
@@ -178,7 +180,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <label htmlFor="signup-username" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Username
+                  {t('auth.username')}
                 </label>
                 <input
                   id="signup-username"
@@ -193,7 +195,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <label htmlFor="signup-password" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Κωδικός (min 6 χαρακτήρες)
+                  {t('auth.password')} (min 6)
                 </label>
                 <input
                   id="signup-password"
@@ -208,7 +210,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <label htmlFor="signup-confirm" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Επιβεβαίωση κωδικού
+                  {t('auth.confirmPassword')}
                 </label>
                 <input
                   id="signup-confirm"
@@ -221,16 +223,16 @@ export default function AuthPage() {
                 />
               </div>
               <button type="submit" className="btn-primary w-full py-3" disabled={submitting}>
-                {submitting ? 'Δημιουργία...' : 'Εγγραφή'}
+                {submitting ? t('common.loading') : t('auth.signup')}
               </button>
             </form>
           )}
 
           <p className="mt-6 text-center text-sm text-slate-500">
             {mode === 'login' ? (
-              <>Δεν έχετε λογαριασμό; <Link to="/signup" className="font-medium text-blue-600 hover:underline">Εγγραφή</Link></>
+              <>{t('auth.noAccount')} <Link to="/signup" className="font-medium text-blue-600 hover:underline">{t('auth.signup')}</Link></>
             ) : (
-              <>Έχετε ήδη λογαριασμό; <Link to="/login" className="font-medium text-blue-600 hover:underline">Σύνδεση</Link></>
+              <>{t('auth.hasAccount')} <Link to="/login" className="font-medium text-blue-600 hover:underline">{t('auth.login')}</Link></>
             )}
           </p>
         </div>

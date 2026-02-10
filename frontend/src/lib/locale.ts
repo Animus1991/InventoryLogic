@@ -1,6 +1,9 @@
-/** Ελληνική μορφή νομίσματος (€). */
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('el-GR', { style: 'currency', currency: 'EUR' }).format(value);
+import { getStoredCurrency, formatCurrencyWith } from './currency';
+
+/** Μορφή νομίσματος με το επιλεγμένο νόμισμα της εφαρμογής (από ρυθμίσεις). */
+export function formatCurrency(value: number, currencyCode?: string): string {
+  const code = currencyCode ?? getStoredCurrency();
+  return formatCurrencyWith(value, code);
 }
 
 /** Ελληνική μορφή αριθμού (ακέραιος ή δεκαδικός). */

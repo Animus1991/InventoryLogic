@@ -48,7 +48,7 @@ spring.datasource.password=ΤΟ_ΚΩΔΙΚΟ_ΣΟΥ
 
 | Πίνακας | Περιγραφή |
 |---------|-----------|
-| **products** | Προϊόντα (id, sku, name, category, barcode, unit, description, price, location, dimensions, color_ral, packaging_info, stock, min_stock) |
+| **products** | Προϊόντα (id, sku, name, category, barcode, qr_code, unit, description, manufacturer_term, local_slang, price, location, dimensions, color_ral, packaging_info, supplier, internal_notes, stock, min_stock) |
 | **stock_movements** | Κινήσεις αποθέματος (id, product_id, delta, note, reference, created_at) |
 | **audit_log** | Ιστορικό αλλαγών (id, product_id, action, details, created_at) |
 | **app_user** | Χρήστες (id, email, username, password_hash) |
@@ -79,7 +79,10 @@ spring.datasource.password=ΤΟ_ΚΩΔΙΚΟ_ΣΟΥ
 | POST | **/api/products/{id}/adjust** | Προσαρμογή αποθέματος | Σώμα: `{ "delta", "note", "reference" }` |
 | GET | **/api/products/{id}/movements** | Ιστορικό κινήσεων | — |
 | GET | **/api/products/{id}/audit** | Audit log προϊόντος | — |
+| POST | **/api/products/import** | Μαζική εισαγωγή | Multipart: `file` = CSV ή Excel (.xlsx, .xls). Απάντηση: `{ "created", "updated", "errors": [] }` |
 | POST | **/api/products/seed** | Δειγματική λίστα | — |
+
+**Μαζική εισαγωγή (POST /api/products/import):** Επικεφαλίδα CSV/Excel: `sku`, `name`, `category`, `barcode`, `qrCode`, `unit`, `description`, `manufacturerTerm`, `localSlang`, `price`, `location`, `dimensions`, `colorRal`, `packagingInfo`, `supplier`, `internalNotes`, `stock`, `minStock`. **SKU** = κωδικός προϊόντος (Stock Keeping Unit). Αν SKU υπάρχει → ενημέρωση· αλλιώς δημιουργία.
 
 ### Κεντρική οθόνη & Αναφορές (απαιτείται JWT)
 
