@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import QRCode from 'qrcode'
 import { getDashboardStats, getByBarcode, type DashboardStats as Stats } from '../lib/api'
 import { formatCurrency, formatNumber } from '../lib/locale'
 import BarcodeScanner from '../components/BarcodeScanner'
@@ -13,6 +14,12 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [showScanner, setShowScanner] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
+  const [installQrDataUrl, setInstallQrDataUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const url = typeof window !== 'undefined' ? window.location.origin : ''
+    if (url) QRCode.toDataURL(url, { width: 160, margin: 1 }).then(setInstallQrDataUrl).catch(() => {})
+  }, [])
 
   useEffect(() => {
     getDashboardStats()
@@ -85,14 +92,14 @@ export default function DashboardPage() {
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card p-5">
-          <p className="text-sm font-medium text-slate-500">Σύνολο προϊόντων</p>
+          <p className="text-sm font-medium text-slate-500">{t('dashboard.totalProducts')}</p>
           <p className="mt-1 text-2xl font-bold text-slate-800">{formatNumber(s.productCount)}</p>
-          <Link to="/products" className="mt-2 inline-flex min-h-[44px] items-center text-sm text-blue-600 hover:underline">Προβολή λίστας →</Link>
+          <Link to="/products" className="mt-2 inline-flex min-h-[44px] items-center text-sm text-blue-600 hover:underline">{t('dashboard.viewList')}</Link>
         </div>
         <div className="card p-5">
-          <p className="text-sm font-medium text-slate-500">Χαμηλό απόθεμα</p>
+          <p className="text-sm font-medium text-slate-500">{t('dashboard.lowStock')}</p>
           <p className="mt-1 text-2xl font-bold text-amber-700">{formatNumber(s.lowStockCount)}</p>
-          <Link to="/order" className="mt-2 inline-flex min-h-[44px] items-center text-sm text-blue-600 hover:underline">Τι να παραγγείλω →</Link>
+          <Link to="/order" className="mt-2 inline-flex min-h-[44px] items-center text-sm text-blue-600 hover:underline">{t('dashboard.orderBlockTitle')} →</Link>
         </div>
         <div className="card p-5">
           <p className="text-sm font-medium text-slate-500">{t('dashboard.totalValue')}</p>
@@ -111,6 +118,17 @@ export default function DashboardPage() {
         <Link to="/order" className="btn-primary inline-flex">
           {t('dashboard.openOrderList')}
         </Link>
+      </div>
+
+      <div className="card mt-6 border-emerald-200 bg-emerald-50/40 p-5">
+        <h3 className="mb-2 text-base font-semibold text-slate-800">📱 {t('install.qrTitle')}</h3>
+        <p className="mb-3 text-sm text-slate-600">{t('install.qrHint')}</p>
+        {installQrDataUrl && (
+          <div className="mb-3 inline-block rounded-lg border-2 border-white bg-white p-2 shadow-sm">
+            <img src={installQrDataUrl} alt="QR" className="h-[180px] w-[180px]" />
+          </div>
+        )}
+        <p className="text-xs text-slate-500">{t('install.sameNetwork')}</p>
       </div>
     </div>
   )

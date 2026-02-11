@@ -8,6 +8,7 @@ import MovementsPanel from './components/MovementsPanel'
 import BarcodeScanner from './components/BarcodeScanner'
 import CurrencySelector from './components/CurrencySelector'
 import LanguageSwitcher from './components/LanguageSwitcher'
+import TourModal from './components/TourModal'
 import { useI18n } from './contexts/I18nContext'
 
 function normalizeForSearch(s: string): string {
@@ -64,6 +65,7 @@ function App({ children }: { children?: React.ReactNode }) {
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  const [showTour, setShowTour] = useState(false)
   const [, setCurrencyKey] = useState(0)
   const { t } = useI18n()
 
@@ -265,6 +267,7 @@ function App({ children }: { children?: React.ReactNode }) {
               <Link to="/print-barcodes" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.printBarcodes')}</Link>
               <Link to="/import" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.import')}</Link>
               <Link to="/about" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.about')}</Link>
+              <button type="button" onClick={() => setShowTour(true)} className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800" title={t('about.guideTitle')}>?</button>
               <LanguageSwitcher />
               <CurrencySelector onCurrencyChange={() => setCurrencyKey((k) => k + 1)} />
               {getToken() ? (
@@ -281,6 +284,8 @@ function App({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
       </header>
+
+      {showTour && <TourModal onClose={() => setShowTour(false)} />}
 
       {children !== undefined ? (
         children
