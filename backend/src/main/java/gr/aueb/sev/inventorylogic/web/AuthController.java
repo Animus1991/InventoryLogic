@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 
 @RestController
@@ -38,13 +39,44 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         try {
-            User user = authService.register(req.email(), req.username(), req.password());
+            User user = authService.register(req.email(), req.username(), req.password(), req.inviteToken());
             String token = authService.login(user.getEmail(), req.password());
             return ResponseEntity.status(201).body(Map.of(
                     "token", token,
                     "username", user.getUsername(),
                     "email", user.getEmail()
             ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Μη εξουσιοδοτημένο"));
+        }
+        User user = authService.findByEmailOrUsername(principal.getName());
+        return ResponseEntity.ok(Map.of(
+                "username", user.getUsername(),
+                "email", user.getEmail() != null ? user.getEmail() : "",
+                "admin", user.isAdmin()
+        ));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(Principal principal, @RequestBody Map<String, String> body) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Μη εξουσιοδοτημένο"));
+        }
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+        if (currentPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Απαιτούνται currentPassword και newPassword"));
+        }
+        try {
+            authService.changePassword(principal.getName(), currentPassword, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Ο κωδικός ενημερώθηκε"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

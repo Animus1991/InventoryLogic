@@ -1,0 +1,8 @@
+# Copy this file to: backend/application-local.properties
+# (same folder as pom.xml; that file is in .gitignore and must NOT be committed to git).
+#
+# Set the email of the user who should be admin. That user must already exist:
+# 1) Register in the app with your real email.
+# 2) Then add below (uncomment and set your email), save, and restart the backend.
+#
+# admin.email=your@real.email

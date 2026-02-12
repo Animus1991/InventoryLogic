@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '../lib/api'
-import { formatCurrency } from '../lib/locale'
+import { formatCurrency, formatUnit, translateKnownUnitsInText } from '../lib/locale'
 import { useI18n } from '../contexts/I18nContext'
 
 type Props = {
@@ -65,14 +65,14 @@ export default function ProductTable({
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                  {t('product.stock')}: {p.stock} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+                  {t('product.stock')}: {p.stock} {formatUnit(p.unit, t)}
                 </span>
                 {p.price != null && (
                   <span className="text-sm text-slate-600">{formatCurrency(Number(p.price))}</span>
                 )}
                 {p.location && <span className="text-xs text-slate-500">{t('product.locationShort')}: {p.location}</span>}
                 {p.colorRal && <span className="text-xs text-slate-500">{t('product.ralLabel')} {p.colorRal}</span>}
-                {p.packagingInfo && <span className="text-xs text-slate-500">{t('product.packagingShort')} {p.packagingInfo}</span>}
+                {p.packagingInfo && <span className="text-xs text-slate-500">{t('product.packagingShort')} {translateKnownUnitsInText(p.packagingInfo, t) || p.packagingInfo}</span>}
                 {p.barcode && <span className="text-xs text-slate-400">{t('product.barcodeLabel')}: {p.barcode}</span>}
                 {p.minStock > 0 && <span className="text-sm text-slate-500">{t('product.minShort')} {p.minStock}</span>}
                 {p.stock <= p.minStock && p.minStock > 0 && (

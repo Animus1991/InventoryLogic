@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { login, register, setToken, getToken } from '../lib/api'
+import { emitLoggedIn } from '../contexts/AuthContext'
 import { useI18n } from '../contexts/I18nContext'
 
 type Mode = 'login' | 'signup'
@@ -37,6 +38,7 @@ export default function AuthPage() {
     try {
       const data = await login(emailOrUsername.trim(), password)
       setToken(data.token)
+      emitLoggedIn()
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.loginError'))
@@ -65,8 +67,10 @@ export default function AuthPage() {
     setSuccess(null)
     setSubmitting(true)
     try {
-      const data = await register(email.trim().toLowerCase(), username.trim(), password)
+      const inviteToken = new URLSearchParams(location.search).get('invite') ?? undefined
+      const data = await register(email.trim().toLowerCase(), username.trim(), password, inviteToken)
       setToken(data.token)
+      emitLoggedIn()
       setSuccess(t('auth.accountCreated'))
       setTimeout(() => navigate('/', { replace: true }), 800)
     } catch (err) {

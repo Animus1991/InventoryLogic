@@ -6,6 +6,29 @@ import { formatCurrency, formatNumber } from '../lib/locale'
 import BarcodeScanner from '../components/BarcodeScanner'
 import { useI18n } from '../contexts/I18nContext'
 
+/** When app runs on localhost, get this machine's LAN IP so the QR points to a URL the phone can open. */
+function getLocalLanIP(): Promise<string | null> {
+  return new Promise((resolve) => {
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [] })
+      pc.createDataChannel('')
+      pc.createOffer().then((offer) => pc.setLocalDescription(offer)).catch(() => resolve(null))
+      pc.onicecandidate = (ice) => {
+        if (!ice?.candidate?.candidate) return
+        const m = ice.candidate.candidate.match(/([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/)
+        const ip = m?.[1]
+        if (ip && !ip.startsWith('127.') && ip !== '0.0.0.0') {
+          pc.close()
+          resolve(ip)
+        }
+      }
+      setTimeout(() => { pc.close(); resolve(null) }, 4000)
+    } catch {
+      resolve(null)
+    }
+  })
+}
+
 export default function DashboardPage() {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -15,10 +38,23 @@ export default function DashboardPage() {
   const [showScanner, setShowScanner] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
   const [installQrDataUrl, setInstallQrDataUrl] = useState<string | null>(null)
+  const [installUrl, setInstallUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    const url = typeof window !== 'undefined' ? window.location.origin : ''
-    if (url) QRCode.toDataURL(url, { width: 160, margin: 1 }).then(setInstallQrDataUrl).catch(() => {})
+    if (typeof window === 'undefined') return
+    const { hostname, port, protocol } = window.location
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
+    if (isLocal) {
+      getLocalLanIP().then((lanIp) => {
+        const url = lanIp ? `${protocol}//${lanIp}:${port}` : null
+        setInstallUrl(url)
+        if (url) QRCode.toDataURL(url, { width: 160, margin: 1 }).then(setInstallQrDataUrl).catch(() => {})
+      })
+    } else {
+      const url = window.location.origin
+      setInstallUrl(url)
+      if (url) QRCode.toDataURL(url, { width: 160, margin: 1 }).then(setInstallQrDataUrl).catch(() => {})
+    }
   }, [])
 
   useEffect(() => {
@@ -127,6 +163,14 @@ export default function DashboardPage() {
           <div className="mb-3 inline-block rounded-lg border-2 border-white bg-white p-2 shadow-sm">
             <img src={installQrDataUrl} alt="QR" className="h-[180px] w-[180px]" />
           </div>
+        )}
+        {installUrl && (
+          <p className="mb-2 break-all font-mono text-sm text-slate-700">
+            {t('install.urlForPhone')} <a href={installUrl} rel="noopener noreferrer" className="text-blue-600 underline">{installUrl}</a>
+          </p>
+        )}
+        {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && !installUrl && (
+          <p className="mb-2 text-sm text-amber-700">{t('install.localhostFallback')}</p>
         )}
         <p className="text-xs text-slate-500">{t('install.sameNetwork')}</p>
       </div>

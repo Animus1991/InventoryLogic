@@ -20,6 +20,9 @@ public class User {
     @Column(nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(nullable = false)
+    private boolean admin = false;
+
     public User() {}
 
     public User(String email, String username, String passwordHash) {
@@ -36,6 +39,8 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public boolean isAdmin() { return admin; }
+    public void setAdmin(boolean admin) { this.admin = admin; }
 
     @Override
     public boolean equals(Object o) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getValuationReport, type ValuationReport as Report } from '../lib/api'
-import { formatCurrency, formatNumber } from '../lib/locale'
+import { formatCurrency, formatNumber, formatUnit } from '../lib/locale'
 import { useI18n } from '../contexts/I18nContext'
 
 export default function ReportsPage() {
@@ -76,7 +76,7 @@ export default function ReportsPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3">{formatNumber(row.stock)}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.unit || 'τεμ.'}</td>
+                    <td className="px-4 py-3 text-slate-600">{formatUnit(row.unit, t)}</td>
                     <td className="px-4 py-3 text-right">{formatCurrency(row.unitPrice)}</td>
                     <td className="px-4 py-3 text-right font-medium">{formatCurrency(row.value)}</td>
                   </tr>

@@ -15,5 +15,8 @@ public record RegisterRequest(
 
         @NotBlank(message = "Password απαιτείται")
         @Size(min = 6, message = "Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες")
-        String password
+        String password,
+
+        /** Required when app is in invite-only mode. */
+        String inviteToken
 ) {}

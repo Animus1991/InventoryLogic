@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getProduct, getMovements, getAuditLog, adjustStock, updateProduct, type Product, type StockMovement, type AuditLog } from '../lib/api'
-import { formatCurrency, formatDateTime } from '../lib/locale'
+import { formatCurrency, formatDateTime, formatUnit } from '../lib/locale'
 import { SKU_TERMINOLOGY } from '../lib/skuTerminology'
 import { useI18n } from '../contexts/I18nContext'
 
@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-            {t('product.stock')}: {product.stock} {(product.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+            {t('product.stock')}: {product.stock} {formatUnit(product.unit, t)}
           </span>
           {product.minStock > 0 && <span className="text-sm text-slate-500">{t('product.minShort')} {product.minStock}</span>}
           {product.price != null && <span className="text-sm text-slate-600">{formatCurrency(Number(product.price))}</span>}

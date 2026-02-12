@@ -1,5 +1,7 @@
 package gr.aueb.sev.inventorylogic.security;
 
+import gr.aueb.sev.inventorylogic.domain.User;
+import gr.aueb.sev.inventorylogic.repo.UserRepo;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,15 +14,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.security.core.GrantedAuthority;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepo userRepo;
 
-    public JwtAuthFilter(JwtUtil jwtUtil) {
+    public JwtAuthFilter(JwtUtil jwtUtil, UserRepo userRepo) {
         this.jwtUtil = jwtUtil;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -31,10 +37,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.getUsernameFromToken(token);
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                userRepo.findByUsername(username)
+                        .filter(User::isAdmin)
+                        .ifPresent(__ -> authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN")));
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         username,
                         null,
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                        authorities
                 );
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);

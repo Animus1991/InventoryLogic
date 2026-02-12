@@ -19,7 +19,9 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 5173,
+    port: 5174,
+    strictPort: true, // Always 5174 so 5173 stays free for another app
+    host: true, // Listen on 0.0.0.0 so phone/other devices can open app via LAN IP (e.g. QR code)
     proxy: {
       '/api': {
         target: 'http://localhost:8081',

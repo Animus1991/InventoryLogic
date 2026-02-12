@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listProducts, type Product } from '../lib/api'
-import { formatNumber } from '../lib/locale'
+import { formatNumber, formatUnit } from '../lib/locale'
 import { useI18n } from '../contexts/I18nContext'
 
 export default function OrderListPage() {
@@ -47,10 +47,10 @@ export default function OrderListPage() {
                   {p.sku && <span className="ml-2 text-sm text-slate-500">{p.sku}</span>}
                 </div>
                 <span className="text-slate-500">
-                  {t('order.stock')}: {formatNumber(p.stock)} / {t('product.minShort')} {formatNumber(p.minStock)} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+                  {t('order.stock')}: {formatNumber(p.stock)} / {t('product.minShort')} {formatNumber(p.minStock)} {formatUnit(p.unit, t)}
                 </span>
                 <span className="rounded bg-amber-100 px-3 py-1 font-medium text-amber-800">
-                  {t('order.suggest')}: +{formatNumber(suggest)} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}
+                  {t('order.suggest')}: +{formatNumber(suggest)} {formatUnit(p.unit, t)}
                 </span>
               </li>
             )

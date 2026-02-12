@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { jsPDF } from 'jspdf'
 import { getByBarcode, getToken, clearToken, type Product, type StockMovement, type AuditLog } from './lib/api'
@@ -10,6 +10,8 @@ import CurrencySelector from './components/CurrencySelector'
 import LanguageSwitcher from './components/LanguageSwitcher'
 import TourModal from './components/TourModal'
 import { useI18n } from './contexts/I18nContext'
+import { useAuth, emitLoggedOut } from './contexts/AuthContext'
+import { formatUnit } from './lib/locale'
 
 function normalizeForSearch(s: string): string {
   return (s || '')
@@ -68,6 +70,24 @@ function App({ children }: { children?: React.ReactNode }) {
   const [showTour, setShowTour] = useState(false)
   const [, setCurrencyKey] = useState(0)
   const { t } = useI18n()
+  const { user } = useAuth()
+  const editPanelRef = useRef<HTMLDivElement>(null)
+  const movementsPanelRef = useRef<HTMLDivElement>(null)
+  const adjustPanelRef = useRef<HTMLDivElement>(null)
+  const deletePanelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (editProduct) editPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [editProduct])
+  useEffect(() => {
+    if (movementsProductId != null) movementsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [movementsProductId])
+  useEffect(() => {
+    if (adjustProductId != null) adjustPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [adjustProductId])
+  useEffect(() => {
+    if (deleteConfirmId != null) deletePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [deleteConfirmId])
 
   const {
     products,
@@ -251,36 +271,55 @@ function App({ children }: { children?: React.ReactNode }) {
       <header className="border-b border-slate-200 bg-card shadow-card">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-800 sm:text-2xl">
-                {t('app.title')}
-              </h1>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {t('app.subtitle')}
-              </p>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <div>
+                <Link to="/" className="text-xl font-bold tracking-tight text-slate-800 sm:text-2xl hover:text-slate-600">
+                  {t('app.title')}
+                </Link>
+                <p className="mt-0.5 text-xs text-slate-500 hidden sm:block">{t('app.subtitle')}</p>
+              </div>
+              <nav className="flex flex-wrap items-center gap-1 sm:gap-2 text-sm font-medium text-slate-600">
+                <Link to="/" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.dashboard')}</Link>
+                <Link to="/products" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.products')}</Link>
+                <Link to="/reports" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.reports')}</Link>
+                <Link to="/order" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.order')}</Link>
+                <Link to="/print-barcodes" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.printBarcodes')}</Link>
+                <Link to="/import" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.import')}</Link>
+                <Link to="/about" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.about')}</Link>
+              </nav>
             </div>
-            <nav className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm font-medium text-slate-600">
-              <Link to="/" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.dashboard')}</Link>
-              <Link to="/products" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.products')}</Link>
-              <Link to="/reports" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.reports')}</Link>
-              <Link to="/order" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.order')}</Link>
-              <Link to="/print-barcodes" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.printBarcodes')}</Link>
-              <Link to="/import" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.import')}</Link>
-              <Link to="/about" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.about')}</Link>
-              <button type="button" onClick={() => setShowTour(true)} className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800" title={t('about.guideTitle')}>?</button>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 ml-auto">
               <LanguageSwitcher />
               <CurrencySelector onCurrencyChange={() => setCurrencyKey((k) => k + 1)} />
+              <button type="button" onClick={() => setShowTour(true)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700" title={t('about.guideTitle')}>?</button>
+              <span className="hidden sm:inline w-px h-6 bg-slate-200" aria-hidden />
               {getToken() ? (
-                <button type="button" onClick={() => { clearToken(); navigate('/login', { replace: true }); }} className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">
-                  {t('nav.logout')}
-                </button>
+                <>
+                  <Link to="/settings" className="min-h-[44px] inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800" title={t('nav.settings')}>
+                    {t('nav.settings')}
+                  </Link>
+                  <Link
+                    to="/admin"
+                    className={`min-h-[44px] inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium border ${user?.admin ? 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200 hover:text-amber-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800 border-slate-200'}`}
+                    title={t('nav.admin')}
+                  >
+                    {t('nav.admin')}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => { clearToken(); emitLoggedOut(); navigate('/login', { replace: true }); }}
+                    className="min-h-[44px] inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200"
+                  >
+                    {t('nav.logout')}
+                  </button>
+                </>
               ) : (
                 <>
-                  <Link to="/signup" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.signup')}</Link>
-                  <Link to="/login" className="min-h-[44px] inline-flex items-center px-2 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-800">{t('nav.login')}</Link>
+                  <Link to="/signup" className="min-h-[44px] inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800">{t('nav.signup')}</Link>
+                  <Link to="/login" className="min-h-[44px] inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800">{t('nav.login')}</Link>
                 </>
               )}
-            </nav>
+            </div>
           </div>
         </div>
       </header>
@@ -328,7 +367,7 @@ function App({ children }: { children?: React.ReactNode }) {
           {scannedProduct && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/80 p-3">
               <span className="text-sm font-medium text-slate-800">{scannedProduct.name}</span>
-              <span className="text-sm text-slate-500">{t('product.stock')}: {scannedProduct.stock} {scannedProduct.unit || 'τεμ.'}</span>
+              <span className="text-sm text-slate-500">{t('product.stock')}: {scannedProduct.stock} {formatUnit(scannedProduct.unit, t)}</span>
               <Link to={`/product/${scannedProduct.id}`} className="btn-secondary text-sm">{t('barcode.openOrEdit')}</Link>
             </div>
           )}
@@ -402,7 +441,7 @@ function App({ children }: { children?: React.ReactNode }) {
                   <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white/60 px-3 py-2">
                     <span className="font-medium text-slate-700">{p.name}</span>
                     <span className="text-slate-500">{t('product.stock')}: {p.stock} / {t('product.minShort')} {p.minStock}</span>
-                    <span className="rounded bg-amber-100 px-2 py-0.5 font-medium text-amber-800">{t('order.suggest')}: +{suggest} {(p.unit || 'τεμ.').replace('τεμάχια', 'τεμ.')}</span>
+                    <span className="rounded bg-amber-100 px-2 py-0.5 font-medium text-amber-800">{t('order.suggest')}: +{suggest} {formatUnit(p.unit, t)}</span>
                   </li>
                 )
               })}
@@ -427,7 +466,7 @@ function App({ children }: { children?: React.ReactNode }) {
         )}
 
         {deleteConfirmId !== null && (
-          <div className="card mb-6 border-amber-200 bg-amber-50/50 p-5">
+          <div ref={deletePanelRef} className="card mb-6 border-amber-200 bg-amber-50/50 p-5">
             <p className="text-slate-700">{t('common.deleteConfirm')}</p>
             <div className="mt-3 flex gap-2">
               <button type="button" onClick={() => handleDelete(deleteConfirmId)} className="btn-primary bg-red-600 hover:bg-red-700" disabled={submitting}>
@@ -441,6 +480,7 @@ function App({ children }: { children?: React.ReactNode }) {
         )}
 
         {movementsProductId !== null && (
+          <div ref={movementsPanelRef}>
           <MovementsPanel
             showAudit={showAuditInPanel}
             movements={movements}
@@ -455,10 +495,11 @@ function App({ children }: { children?: React.ReactNode }) {
             }}
             onClose={() => setMovementsProductId(null)}
           />
+          </div>
         )}
 
         {adjustProductId !== null && (
-          <form onSubmit={handleAdjustWithForm} className="card mb-6 border-blue-200 bg-blue-50/30 p-5">
+          <form ref={adjustPanelRef} onSubmit={handleAdjustWithForm} className="card mb-6 border-blue-200 bg-blue-50/30 p-5">
             <h2 className="mb-3 text-base font-semibold text-slate-800">{t('product.adjustStock')}</h2>
             <div className="flex flex-wrap items-end gap-4">
               <div>
@@ -482,6 +523,7 @@ function App({ children }: { children?: React.ReactNode }) {
         )}
 
         {editProduct && (
+          <div ref={editPanelRef}>
           <form onSubmit={handleUpdate} className="card mb-6 p-5">
             <h2 className="mb-4 text-base font-semibold text-slate-800">{t('product.editTitle')}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -505,6 +547,7 @@ function App({ children }: { children?: React.ReactNode }) {
               <button type="button" onClick={() => setEditProduct(null)} className="btn-secondary">{t('common.cancel')}</button>
             </div>
           </form>
+          </div>
         )}
 
         {showForm && (

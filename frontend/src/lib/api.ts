@@ -112,13 +112,53 @@ export async function login(emailOrUsername: string, password: string): Promise<
   return r.json();
 }
 
-export async function register(email: string, username: string, password: string): Promise<{ token: string; username: string; email: string }> {
+export interface Me {
+  username: string;
+  email: string;
+  admin: boolean;
+}
+
+export async function getMe(): Promise<Me | null> {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return null;
+  try {
+    const r = await fetch(`${API}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (r.status === 401 || !r.ok) return null;
+    return r.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const r = await apiFetch(`${API}/auth/change-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  if (!r.ok) throw new Error(await parseApiError(r));
+}
+
+export async function register(
+  email: string,
+  username: string,
+  password: string,
+  inviteToken?: string | null
+): Promise<{ token: string; username: string; email: string }> {
   let r: Response;
+  const body: { email: string; username: string; password: string; inviteToken?: string } = {
+    email: email.trim().toLowerCase(),
+    username: username.trim(),
+    password,
+  };
+  if (inviteToken?.trim()) body.inviteToken = inviteToken.trim();
   try {
     r = await fetch(`${API}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim().toLowerCase(), username: username.trim(), password }),
+      body: JSON.stringify(body),
     });
   } catch {
     throw new Error('Δεν υπάρχει σύνδεση με τον server. Ελέγξτε ότι το backend τρέχει στο http://localhost:8081');
@@ -352,4 +392,84 @@ export async function getValuationReport(): Promise<ValuationReport> {
     items,
     totalValue: data.totalValue != null ? Number(data.totalValue) : 0,
   };
+}
+
+// --- Admin (requires admin role) ---
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  admin: boolean;
+}
+
+export async function adminListUsers(): Promise<AdminUser[]> {
+  const r = await apiFetch(`${API}/admin/users`);
+  if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+export async function adminCreateInvite(): Promise<{ token: string; link: string }> {
+  const r = await apiFetch(`${API}/admin/invites`, { method: 'POST' });
+  if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+export async function adminGetSettings(): Promise<{ inviteOnly: boolean }> {
+  const r = await apiFetch(`${API}/admin/settings`);
+  if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+export async function adminUpdateSettings(body: { inviteOnly: boolean }): Promise<{ inviteOnly: boolean }> {
+  const r = await apiFetch(`${API}/admin/settings`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+export interface AdminOverview {
+  userCount: number;
+  productCount: number;
+  inviteOnly: boolean;
+}
+
+export interface AdminActivityItem {
+  id: number;
+  productId: number;
+  action: string;
+  details: string;
+  createdAt: string;
+}
+
+export async function adminGetOverview(): Promise<AdminOverview> {
+  const r = await apiFetch(`${API}/admin/overview`);
+  if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+export async function adminGetActivity(limit?: number): Promise<AdminActivityItem[]> {
+  const url = limit != null ? `${API}/admin/activity?limit=${limit}` : `${API}/admin/activity`;
+  const r = await apiFetch(url);
+  if (!r.ok) await apiError(r);
+  return r.json();
+}
+
+/** Downloads products CSV; returns blob URL (revoke after use). */
+export async function adminExportProductsCsv(): Promise<string> {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const r = await fetch(`${API}/admin/export/products`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (r.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    window.dispatchEvent(new CustomEvent(AUTH_REQUIRED_EVENT));
+    throw new Error('Η σύνδεση έληξε.');
+  }
+  if (!r.ok) throw new Error(await parseApiError(r));
+  const blob = await r.blob();
+  return URL.createObjectURL(blob);
 }

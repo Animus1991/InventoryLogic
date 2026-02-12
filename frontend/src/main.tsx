@@ -10,9 +10,12 @@ import OrderListPage from './pages/OrderListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import AboutPage from './pages/AboutPage'
 import AuthPage from './pages/AuthPage'
+import AdminPage from './pages/AdminPage'
 import ReportsPage from './pages/ReportsPage'
 import BarcodePrintPage from './pages/BarcodePrintPage'
 import ImportPage from './pages/ImportPage'
+import SettingsPage from './pages/SettingsPage'
+import { AuthProvider } from './contexts/AuthContext'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -30,7 +33,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [navigate])
 
   if (!getToken() && !isAuthPage) return null
-  return <>{children}</>
+  return <AuthProvider>{children}</AuthProvider>
 }
 
 createRoot(document.getElementById('root')!).render(
@@ -49,6 +52,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/import" element={<App><ImportPage /></App>} />
           <Route path="/product/:id" element={<App><ProductDetailPage /></App>} />
           <Route path="/about" element={<App><AboutPage /></App>} />
+          <Route path="/settings" element={<App><SettingsPage /></App>} />
+          <Route path="/admin" element={<App><AdminPage /></App>} />
         </Routes>
         </AuthGuard>
       </BrowserRouter>
