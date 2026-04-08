@@ -1,100 +1,102 @@
-# InventoryLogic — Αποθήκη / Εμπόρευμα
+# InventoryLogic — Warehouse / Inventory Management
 
-Σύστημα διαχείρισης αποθήκης (αλουμίνιο, σίδηρας ή οποιαδήποτε εμπόρευμα) με **Java Spring Boot** (REST API), **React** (Vite), **Tailwind CSS** και **MySQL**. Σχεδιασμένο για **κινητά πρώτα** (mobile-first): σάρωση barcode από υπαλλήλους στα ράφια, γρήγορη καταχώρηση με λίγα κλικ, PWA εγκατάσταση.
+A warehouse management system (aluminium, steel, or any type of goods) built with **Java Spring Boot** (REST API), **React** (Vite), **Tailwind CSS**, and **MySQL**. Designed **mobile-first**: employees can scan barcodes on the shelves, quickly record stock changes in a few taps, and install the app as a PWA.
 
-**Για τρέξιμο και προβολή στο browser:** δες **[ΤΡΕΞΙΜΟ.md](ΤΡΕΞΙΜΟ.md)**.
+**To run and view in the browser:** see **[ΤΡΕΞΙΜΟ.md](ΤΡΕΞΙΜΟ.md)**.
+
+> 🇬🇷 Ελληνική έκδοση: **[README_EL.md](README_EL.md)**
 
 ---
 
-## Τι κάνει η εφαρμογή
+## What the application does
 
-### Κεντρική οθόνη (Dashboard)
-- **KPI:** σύνολο προϊόντων, προϊόντα χαμηλού αποθέματος, συνολική αξία αποθέματος (€), κινήσεις τελευταίων 7 ημερών.
-- Σύντομο μπλοκ «Τι να παραγγείλω» με link στη λίστα παραγγελίας.
+### Dashboard
+- **KPIs:** total products, low-stock products, total inventory value (€), stock movements over the last 7 days.
+- A quick "What to order" block with a link to the order list.
 
-### Διαχείριση προϊόντων
-- **Λίστα προϊόντων** με SKU, όνομα, κατηγορία, barcode, μονάδα, τρέχουσα ποσότητα, ελάχιστο όριο.
-- **Επεκτεταμένα πεδία:** τιμή, θέση αποθήκης (location), διαστάσεις, χρώμα RAL, συσκευασία· **QR code** (προαιρετικό περιεχόμενο για ετικέτες)· **προμηθευτής** (supplier)· **εσωτερικές σημειώσεις** (internalNotes, όχι για πελάτες).
-- **Νέο προϊόν** και **επεξεργασία** (PATCH) με όλα τα πεδία.
-- **Διαγραφή** με επιβεβαίωση.
+### Product management
+- **Product list** with SKU, name, category, barcode, unit, current quantity, and minimum threshold.
+- **Extended fields:** price, warehouse location, dimensions, RAL color, packaging info; **QR code** (optional content for labels); **supplier**; **internal notes** (internalNotes — not visible to customers).
+- **New product** and **edit** (PATCH) with all fields.
+- **Delete** with confirmation.
 
-### Αποθέματα & κινήσεις
-- **Γρήγορη αλλαγή ποσότητας:** κουμπιά +1, +5, +10 και −1, −5, −10 (touch-friendly).
-- **Προσαρμογή με σημείωση/αναφορά** (τιμολόγιο/παραγγελία).
-- **Ιστορικό κινήσεων** και **Audit log** ανά προϊόν.
+### Stock & movements
+- **Quick quantity change:** buttons +1, +5, +10 and −1, −5, −10 (touch-friendly).
+- **Adjustment with note/reference** (invoice/order number).
+- **Movement history** and **Audit log** per product.
 
-### Barcode / QR (κεντρικό για κινητά)
-- **Σκάνερ barcode με κάμερα:** πραγματική σάρωση μέσω κάμερας συσκευής (βιβλιοθήκη html5-qrcode). **Κεντρική οθόνη:** μπλοκ «Σάρωση barcode» με κουμπί «Άνοιγμα σκανάρα» — μόλις ανοίγει η εφαρμογή ο χρήστης μπορεί να σκανάρει και να πάει απευθείας στην καρτέλα προϊόντος. **Σελίδα Προϊόντα:** κουμπί «Άνοιγμα σκανάρα» δίπλα στο πεδίο πληκτρολόγησης.
-- **Πληκτρολόγηση** barcode ως εναλλακτική (όταν δεν υπάρχει κάμερα ή η άδεια απορριφθεί).
-- Μετά σάρωση/αναζήτηση: εμφάνιση προϊόντος και γρήγορη προσαρμογή αποθέματος (λιγά κλικ).
+### Barcode / QR (key feature for mobile)
+- **Camera barcode scanner:** real scanning via the device camera (html5-qrcode library). **Dashboard:** a "Scan barcode" block with an "Open scanner" button — as soon as the app opens, the user can scan and go directly to the product page. **Products page:** "Open scanner" button next to the text input field.
+- **Manual barcode entry** as an alternative (when no camera is available or permission is denied).
+- After scanning/searching: product is displayed with quick stock adjustment options (few taps).
 
-### Αναζήτηση & φίλτρα
-- Αναζήτηση (όνομα, SKU, barcode, κατηγορία) με ανοχή τόνων (EL/EN).
-- Φίλτρο «Μόνο χαμηλό απόθεμα» και φίλτρο κατηγορίας (chips).
+### Search & filters
+- Search by name, SKU, barcode, or category with accent tolerance (EL/EN).
+- "Low stock only" filter and category filter (chips).
 
-### Αναφορές
-- **Αναφορά αποτίμησης αποθέματος:** αξία ανά προϊόν (ποσότητα × τιμή), συνολική αξία στο **επιλεγμένο νόμισμα**.
-- **Τι να παραγγείλω:** λίστα προϊόντων με stock ≤ minStock και προτεινόμενη ποσότητα.
+### Reports
+- **Inventory valuation report:** value per product (quantity × price), total value in the **selected currency**.
+- **What to order:** list of products with stock ≤ minStock and suggested reorder quantity.
 
-### Νόμισμα (χώρα / τοπικό νόμισμα)
-- **Επιλογή νομίσματος** στο header: EUR, USD, GBP, CHF, ALL (λεκ), RON, BGN, TRY, PLN, CNY. Η επιλογή αποθηκεύεται τοπικά (localStorage) και οι τιμές εμφανίζονται παντού στο επιλεγμένο νόμισμα.
+### Currency (country / local currency)
+- **Currency selector** in the header: EUR, USD, GBP, CHF, ALL (Albanian lek), RON, BGN, TRY, PLN, CNY. The selection is stored locally (localStorage) and prices are displayed everywhere in the selected currency.
 
-### Μαζική εισαγωγή προϊόντων
-- **CSV ή Excel:** σελίδα «Μαζική εισαγωγή» — ανέβασμα αρχείου **CSV** (.csv, .txt) ή **Excel** (.xlsx, .xls) με επικεφαλίδα: `sku`, `name`, `category`, `barcode`, `qrCode`, `unit`, `description`, `manufacturerTerm`, `localSlang`, `price`, `location`, `dimensions`, `colorRal`, `packagingInfo`, `supplier`, `internalNotes`, `stock`, `minStock`. **SKU** = κωδικός προϊόντος (Stock Keeping Unit). Αν το SKU υπάρχει → ενημέρωση πεδίων· αλλιώς δημιουργία. Απάντηση: `created`, `updated`, `errors[]`.
-- **Εισαγωγή από φωτογραφία (OCR):** ανέβασμα εικόνας με κείμενο (χειρόγραφο ή τυπωμένο)· αναγνώριση με **Tesseract.js** (client-side)· επεξεργασία κειμένου· κουμπί «Αναζήτηση προϊόντος από κείμενο» για αντιστοίχιση με υπάρχοντα προϊόντα (σύνδεσμος προς καρτέλα προϊόντος)· ή «Εισαγωγή ως CSV» για μαζική εισαγωγή.
+### Bulk product import
+- **CSV or Excel:** the "Bulk Import" page — upload a **CSV** (.csv, .txt) or **Excel** (.xlsx, .xls) file with headers: `sku`, `name`, `category`, `barcode`, `qrCode`, `unit`, `description`, `manufacturerTerm`, `localSlang`, `price`, `location`, `dimensions`, `colorRal`, `packagingInfo`, `supplier`, `internalNotes`, `stock`, `minStock`. **SKU** = product code (Stock Keeping Unit). If SKU exists → update fields; otherwise create. Response: `created`, `updated`, `errors[]`.
+- **Import from photo (OCR):** upload an image containing text (handwritten or printed); recognized using **Tesseract.js** (client-side); process the text; "Search product from text" button to match existing products (link to product page); or "Import as CSV" for bulk import.
 
-### Εκτύπωση barcode και QR
-- Σελίδα «Εκτύπωση barcode»: λίστα προϊόντων με checkboxes· «Επιλογή όλων» / «Αφαίρεση επιλογής»· **Εκτύπωση (N)** (print)· **Λήψη PDF** (κατέβασμα PDF με ετικέτες barcode + QR)· **Αποστολή με email** (κατέβασμα PDF + άνοιγμα mailto ώστε ο χρήστης να επισυνάψει το αρχείο). Κάθε ετικέτα εμφανίζει barcode (CODE128) και QR (από πεδίο `qrCode` ή URL προϊόντος). Χρήσιμο για νέα προϊόντα ή αντικατάσταση φθαρμένων ετικετών.
+### Barcode and QR printing
+- "Print barcode" page: product list with checkboxes; "Select all" / "Deselect all"; **Print (N)** (browser print); **Download PDF** (download PDF with barcode + QR labels); **Send by email** (download PDF + open mailto so the user can attach the file). Each label displays a barcode (CODE128) and QR (from the `qrCode` field or product URL). Useful for new products or replacing damaged labels.
 
 ### Export
-- **Export CSV** και **Export PDF** λίστας προϊόντων (με φίλτρα).
+- **Export CSV** and **Export PDF** of the product list (with active filters).
 
-### Πλοήγηση, γλώσσα & locale
-- **Μενού:** Κεντρική οθόνη, Προϊόντα, Αναφορές, Τι να παραγγείλω, Εκτύπωση barcode, Μαζική εισαγωγή, Σχετικά.
-- **Πολυγλωσσικότητα (i18n):** πλήρης μετάφραση σε **7 γλώσσες** — **Ελληνικά**, **English**, **Shqip**, **Français**, **Deutsch**, **Italiano**, **Español**. Όλα τα κείμενα διεπαφής (μενού, κουμπιά, φόρμες, μηνύματα, σελίδες Σχετικά, Προϊόντα, Εισαγωγή, Αναφορές, Παραγγελία, Σύνδεση) χρησιμοποιούν το ίδιο σύστημα i18n· αλλαγή γλώσσας από το Language switcher στο header.
-- **Νόμισμα και ημερομηνίες:** ημερομηνίες/αριθμοί σε τοπική μορφή· νόμισμα σύμφωνα με την επιλογή του χρήστη.
+### Navigation, language & locale
+- **Menu:** Dashboard, Products, Reports, What to Order, Print Barcode, Bulk Import, About.
+- **Multilingual (i18n):** full translation in **7 languages** — **Ελληνικά**, **English**, **Shqip**, **Français**, **Deutsch**, **Italiano**, **Español**. All UI text (menus, buttons, forms, messages, About page, Products, Import, Reports, Order, Login) uses the same i18n system; switch language from the Language switcher in the header.
+- **Currency and dates:** dates/numbers in local format; currency according to user selection.
 
-### Τεχνολογία & UX
-- **PWA:** εγκατάσταση ως εφαρμογή (vite-plugin-pwa), standalone, theme/background.
-- **Responsive:** πλήρως responsive (Tailwind, mobile-first)· λειτουργία σε κινητά, tablet και desktop.
-- **Εγκατάσταση σε κινητό:** Στην **Κεντρική οθόνη** (Dashboard) εμφανίζεται **QR code** με τη διεύθυνση της εφαρμογής. Σαρώστε το με το κινητό → ανοίγει η εφαρμογή στο browser → **«Πρόσθεσε στην αρχική οθόνη»** / **Add to Home Screen** (1–2 κλικ). Σε **production** (πραγματικό domain) το ίδιο QR μπορεί να μοιραστεί ώστε να εγκαταστήσει κανείς την εφαρμογή χωρίς Play Store. **Δεν απαιτείται** ξαναγράψιμο σε Java/Kotlin· η εφαρμογή τρέχει ως PWA (React).
-- **Τοπικό δίκτυο (development):** Η εφαρμογή τρέχει πάντα στη **θύρα 5174** (`http://localhost:5174`) ώστε η **5173** να μένει ελεύθερη για άλλη εφαρμογή. Στο κινητό το "localhost" δεν δουλεύει· η εφαρμογή **αυτόματα** εντοπίζει το LAN IP (WebRTC) και εμφανίζει **QR με** `http://IP-PC:5174`. Ο Vite είναι ρυθμισμένος με `host: true` και `strictPort: true`. Αν εμφανίζεται **ERR_CONNECTION_TIMED_OUT**, να ανοίξετε στο firewall τη **θύρα 5174** (Inbound Rule, TCP).
-- **Σημείωση ασφαλείας:** Οι διευθύνσεις `http://10.0.2.2:5174` (Android emulator) και `http://<IP-PC>:5174` (φυσικό κινητό) είναι **κανονικές διευθύνσεις τοπικού δικτύου**· δεν είναι ιός. **Android Studio emulator:** Στο emulator άνοιγμα `http://10.0.2.2:5174`.
-- **Ξεναγήση / Οδηγίες:** Κουμπί **«?»** στο header ανοίγει οδηγίες χρήσης για την τρέχουσα σελίδα. Πλήρεις οδηγίες και λίστα χαρακτηριστικών στη σελίδα **Σχετικά**.
-- **JWT σύνδεση/εγγραφή:** Σύνδεση (email ή username), Εγγραφή. Demo: **admin@inventory.local** / **admin12** (ρύθμιση στο `application.properties` ή env).
+### Technology & UX
+- **PWA:** install as an app (vite-plugin-pwa), standalone mode, custom theme/background.
+- **Responsive:** fully responsive (Tailwind, mobile-first); works on mobile, tablet, and desktop.
+- **Mobile installation:** The **Dashboard** displays a **QR code** with the app's URL. Scan it with your phone → app opens in the browser → **"Add to Home Screen"** (1–2 taps). In **production** (real domain) the same QR can be shared so anyone can install the app without the Play Store. **No need** to rewrite in Java/Kotlin; the app runs as a PWA (React).
+- **Local network (development):** The app always runs on **port 5174** (`http://localhost:5174`) so that **5173** remains free for another app. On mobile, "localhost" doesn't work; the app **automatically** detects the LAN IP (WebRTC) and displays a **QR with** `http://PC-IP:5174`. Vite is configured with `host: true` and `strictPort: true`. If you see **ERR_CONNECTION_TIMED_OUT**, open **port 5174** in your firewall (Inbound Rule, TCP).
+- **Security note:** The addresses `http://10.0.2.2:5174` (Android emulator) and `http://<PC-IP>:5174` (physical mobile) are **normal local network addresses** — not a virus. **Android Studio emulator:** open `http://10.0.2.2:5174` in the emulator.
+- **Tour / Help:** The **"?"** button in the header opens usage instructions for the current page. Full instructions and feature list on the **About** page.
+- **JWT login/register:** Login (email or username), Register. Demo: **admin@inventory.local** / **admin12** (configurable in `application.properties` or env).
 
-### Πότε λειτουργεί η εφαρμογή — πρόσβαση από κινητό και από άλλους (φίλοι, συγγενείς)
+### When the app works — access from mobile and from others (friends, family)
 
-- **Απαραιτήτως χρειάζεται backend:** Η εφαρμογή έχει frontend (React) και backend (Spring Boot + MySQL). Όλα τα δεδομένα (login, προϊόντα, κινήσεις) περνούν από το API. **Αν ο backend δεν τρέχει, η εφαρμογή δεν λειτουργεί** — ούτε στο δικό σου κινητό, ούτε σε κανέναν άλλο. Δεν μπορείς να κλείσεις το backend και να συνεχίζει να δουλεύει κάπου η εφαρμογή.
+- **Backend is required:** The app has a frontend (React) and a backend (Spring Boot + MySQL). All data (login, products, movements) goes through the API. **If the backend is not running, the app does not work** — not on your phone, not for anyone else. You cannot shut down the backend and expect the app to keep working somewhere.
 
-- **Αν τρέχεις όλα τοπικά (στον δικό σου PC):**
-  - **Δικό σου κινητό:** Λειτουργεί μόνο αν το κινητό είναι στο **ίδιο WiFi** με τον PC και τρέχουν και τα δύο (backend στο 8081, frontend στο **5174**). Ο dev server της εφαρμογής είναι κλειδωμένος στη θύρα **5174** ώστε η **5173** να μένει ελεύθερη για άλλη εφαρμογή. Σαρώσεις το QR → ανοίγει `http://IP-PC:5174` → τα API πάνε στον ίδιο PC.
-  - **Φίλος/συγγενής από άλλο WiFi ή δεδομένα κινητού:** **Δεν μπορεί.** Το `192.168.1.x` είναι ιδιωτική διεύθυνση· δεν είναι προσβάσιμη από το internet. Ο φίλος δεν μπορεί να «μπεί» στον δικό σου υπολογιστή από άλλο δίκτυο.
+- **If you run everything locally (on your own PC):**
+  - **Your own phone:** Works only if the phone is on the **same WiFi** as the PC and both are running (backend on 8081, frontend on **5174**). The dev server is locked to port **5174** so that **5173** stays free for another app. Scan the QR → opens `http://PC-IP:5174` → API calls go to the same PC.
+  - **Friend/family from a different WiFi or mobile data:** **Not possible.** `192.168.1.x` is a private address; it is not accessible from the internet. A friend cannot "connect to" your computer from another network.
 
-- **Πώς να μπορεί να εγκαταστήσει και να χρησιμοποιεί ο φίλος/συγγενής από παντού:**
-  - **Σωστή λύση (production):** Να ανεβάσεις **frontend + backend + βάση** σε ένα **server στο internet** (VPS, cloud: π.χ. Railway, Render, Fly.io, AWS, DigitalOcean, κ.λπ.). Τότε η εφαρμογή έχει μια **δημόσια URL** (π.χ. `https://inventory.example.com`). Μπορείς να μοιράζεσαι το link ή το QR **μόνο σε άτομα που εσύ επιλέγεις**· ο backend τρέχει 24/7 στο server και η PWA εγκαθίσταται χωρίς να τρέχει τίποτα στον δικό σου PC.
-  - **Δωρεάν deploy:** Υπάρχουν **δωρεάν πλάνα** (με περιορισμούς) σε πλατφόρμες όπως **Railway**, **Render**, **Fly.io**· μπορείς να ανεβάσεις backend + frontend και να χρησιμοποιήσεις δωρεάν βάση (π.χ. Railway PostgreSQL, ή managed MySQL που προσφέρει η πλατφόρμα). Είναι ασφαλείς τρόποι deploy εφόσον ρυθμίσεις HTTPS, ισχυρό JWT secret και CORS μόνο για το domain σου.
-  - **Πρόσβαση μόνο με τη δική σου έγκριη:** Η εφαρμογή **ήδη** απαιτεί **σύνδεση (login)**· χωρίς λογαριασμό κανείς δεν βλέπει προϊόντα ή δεδομένα. Δηλαδή: ακόμα κι αν κάποιος πάρει το link, θα δει μόνο τη σελίδα σύνδεσης. Εσύ ελέγχεις **ποιος έχει λογαριασμό** (εγγραφή ή δημιουργία από εσένα). Για ακόμα πιο αυστηρό έλεγχο μπορείς στο μέλλον να προσθέσεις «κλειστή εγγραφή» (μόνο με invite link ή έγκριη admin).
-  - **Εναλλακτικά (μόνο για δοκιμή):** Να «εκθέσεις» προσωρινά τον δικό σου PC στο internet (π.χ. με **ngrok** ή port forwarding στο router). Μειονεκτήματα: PC ανοιχτός συνεχώς, κινδύνες ασφαλείας, ασταθής IP.
+- **How to let friends/family use the app from anywhere:**
+  - **Correct solution (production):** Deploy **frontend + backend + database** to a **server on the internet** (VPS, cloud: e.g. Railway, Render, Fly.io, AWS, DigitalOcean, etc.). The app then has a **public URL** (e.g. `https://inventory.example.com`). You can share the link or QR **only with people you choose**; the backend runs 24/7 on the server and the PWA can be installed without running anything on your PC.
+  - **Free deploy:** There are **free plans** (with limitations) on platforms such as **Railway**, **Render**, **Fly.io**; you can deploy backend + frontend and use a free database (e.g. Railway PostgreSQL, or managed MySQL offered by the platform). These are safe deployment options as long as you configure HTTPS, a strong JWT secret, and CORS only for your domain.
+  - **Access only with your approval:** The app **already** requires **login**; without an account, no one can see products or data. Even if someone gets the link, they will only see the login page. You control **who has an account** (registration or creation by you). For even stricter control, you can later add "closed registration" (invite-only or admin approval).
+  - **Alternative (testing only):** Temporarily expose your PC to the internet (e.g. with **ngrok** or port forwarding on your router). Downsides: PC must be on at all times, security risks, unstable IP.
 
-- **Ασφάλεια στο διαδίκτυο:** Για production (deploy σε server) η εφαρμογή είναι σε **καλή βάση**: JWT auth, κωδικοί με hash (BCrypt), CORS περιορισμένο σε επιτρεπτά origins. Για **βέλτιστη** ασφάλεια: (1) Χρήση **HTTPS** παντού. (2) Ισχυρό **jwt.secret** (env, όχι στο repo). (3) **app.cors.allowed-origins** μόνο το production domain σου. (4) Προαιρετικά rate limiting και ενημέρωση dependencies.
+- **Internet security:** For production (deployed to a server), the app has a **solid foundation**: JWT auth, passwords hashed (BCrypt), CORS restricted to allowed origins. For **best** security: (1) Use **HTTPS** everywhere. (2) Strong **jwt.secret** (env variable, not in the repo). (3) **app.cors.allowed-origins** set only to your production domain. (4) Optionally add rate limiting and keep dependencies updated.
 
-**Σύνοψη:** Για χρήση μόνο από εσένα στο σπίτι, αρκεί backend + frontend στον PC και κινητό στο ίδιο WiFi. Για πρόσβαση από φίλους/συγγενείς από παντού, απαιτείται **deploy** σε server· η πρόσβαση ελέγχεται ήδη από το login (μόνο άτομα με λογαριασμό βλέπουν δεδομένα).
+**Summary:** For personal use at home, backend + frontend on your PC with your phone on the same WiFi is enough. For access by friends/family from anywhere, **deploying to a server** is required; access is already controlled by login (only users with accounts can see data).
 
 ---
 
-## Απαιτήσεις
+## Requirements
 
 - **JDK 21**
-- **Maven** (ή `mvnw` στο project)
-- **Node.js** (LTS, για frontend)
-- **MySQL Server** (π.χ. 8.x)
+- **Maven** (or `mvnw` included in the project)
+- **Node.js** (LTS, for frontend)
+- **MySQL Server** (e.g. 8.x)
 
 ---
 
-## Βάση δεδομένων (MySQL)
+## Database (MySQL)
 
-1. Δημιούργησε τη βάση:
+1. Create the database:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS inventory_app
@@ -102,107 +104,107 @@ CREATE DATABASE IF NOT EXISTS inventory_app
   DEFAULT COLLATE utf8mb4_0900_ai_ci;
 ```
 
-2. Ρύθμισε **backend/src/main/resources/application.properties**:
+2. Configure **backend/src/main/resources/application.properties**:
 
 ```properties
 spring.datasource.username=root
-spring.datasource.password=ΤΟ_ΚΩΔΙΚΟ_ΣΟΥ
+spring.datasource.password=YOUR_PASSWORD
 ```
 
-Όλες οι παράμετροι (URL, port, JWT, CORS, demo admin) περιγράφονται στο **[REST_API_KAI_BASI.md](REST_API_KAI_BASI.md)**.
+All parameters (URL, port, JWT, CORS, demo admin) are described in **[REST_API_KAI_BASI.md](REST_API_KAI_BASI.md)**.
 
 ---
 
-## Build & τρέξιμο
+## Build & run
 
 ### Backend (Java)
 
-Από τον φάκελο **backend**:
+From the **backend** folder:
 
 ```bash
 cd backend
 ./mvnw clean package
 ```
 
-**Windows (PowerShell):** `cd backend` μετά `.\mvnw.cmd spring-boot:run`
+**Windows (PowerShell):** `cd backend` then `.\mvnw.cmd spring-boot:run`
 
-- Το API τρέχει στο **http://localhost:8081** (`server.port=8081` στο `application.properties`).
+- The API runs at **http://localhost:8081** (`server.port=8081` in `application.properties`).
 - **Swagger UI:** http://localhost:8081/swagger-ui.html
-- **Σημαντικό:** Αν στο terminal του Vite εμφανίζονται `ECONNREFUSED` για `/api/products` ή `/api/dashboard/stats`, ο **backend δεν τρέχει**. Ξεκινήστε πρώτα το backend (παράπανω), μετά το frontend.
+- **Important:** If the Vite terminal shows `ECONNREFUSED` for `/api/products` or `/api/dashboard/stats`, the **backend is not running**. Start the backend first (above), then the frontend.
 
 ### Frontend (React + Vite + Tailwind)
 
-Από ρίζα project:
+From the project root:
 
 ```bash
-npm run install:frontend   # πρώτη φορά
+npm run install:frontend   # first time only
 npm run dev
 ```
 
-Η εφαρμογή ανοίγει στο **http://localhost:5174**. Ο browser μιλάει με το backend μέσω proxy (`/api` → `localhost:8081`). Η θύρα 5173 παραμένει ελεύθερη για άλλη εφαρμογή.
+The app opens at **http://localhost:5174**. The browser communicates with the backend via proxy (`/api` → `localhost:8081`). Port 5173 remains free for another app.
 
-- **Production build:** `npm run build` (από ρίζα ή `frontend/`). Έξοδος: **frontend/dist/**.
+- **Production build:** `npm run build` (from root or `frontend/`). Output: **frontend/dist/**.
 
 ---
 
-## REST API — κύρια endpoints
+## REST API — main endpoints
 
-| Method | Endpoint | Περιγραφή |
-|--------|----------|-----------|
-| GET | `/api/products` | Λίστα. Query: `lowStockOnly`, `q`, `page`, `size` |
-| GET | `/api/products/{id}` | Ένα προϊόν |
-| GET | `/api/products/by-barcode?code=...` | Αναζήτηση με barcode |
-| GET | `/api/products/{id}/movements` | Ιστορικό κινήσεων |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products` | List. Query: `lowStockOnly`, `q`, `page`, `size` |
+| GET | `/api/products/{id}` | Single product |
+| GET | `/api/products/by-barcode?code=...` | Search by barcode |
+| GET | `/api/products/{id}/movements` | Movement history |
 | GET | `/api/products/{id}/audit` | Audit log |
-| POST | `/api/products` | Δημιουργία |
-| PATCH | `/api/products/{id}` | Ενημέρωση |
-| DELETE | `/api/products/{id}` | Διαγραφή |
-| POST | `/api/products/{id}/adjust` | Προσαρμογή αποθέματος (`delta`, `note`, `reference`) |
-| POST | `/api/products/import` | Μαζική εισαγωγή (multipart `file`: CSV ή Excel .xlsx/.xls) → `{ created, updated, errors[] }` |
-| POST | `/api/products/seed` | Δειγματική λίστα |
-| **GET** | **`/api/dashboard/stats`** | **Στατιστικά κεντρικής οθόνης** |
-| **GET** | **`/api/reports/valuation`** | **Αναφορά αποτίμησης αποθέματος** |
-| POST | `/api/auth/login` | Σύνδεση → `{ token, username, email }` |
-| POST | `/api/auth/register` | Εγγραφή → 201 `{ token, username, email }` |
+| POST | `/api/products` | Create |
+| PATCH | `/api/products/{id}` | Update |
+| DELETE | `/api/products/{id}` | Delete |
+| POST | `/api/products/{id}/adjust` | Stock adjustment (`delta`, `note`, `reference`) |
+| POST | `/api/products/import` | Bulk import (multipart `file`: CSV or Excel .xlsx/.xls) → `{ created, updated, errors[] }` |
+| POST | `/api/products/seed` | Seed sample data |
+| **GET** | **`/api/dashboard/stats`** | **Dashboard statistics** |
+| **GET** | **`/api/reports/valuation`** | **Inventory valuation report** |
+| POST | `/api/auth/login` | Login → `{ token, username, email }` |
+| POST | `/api/auth/register` | Register → 201 `{ token, username, email }` |
 
-Λεπτομέρειες και παράμετροι σύνδεσης/βάσης: **[REST_API_KAI_BASI.md](REST_API_KAI_BASI.md)**.
+Details and connection/database parameters: **[REST_API_KAI_BASI.md](REST_API_KAI_BASI.md)**.
 
 ---
 
-## Ρυθμίσεις (παράμετροι)
+## Configuration (parameters)
 
-| Παράμετρος | Default | Περιγραφή |
-|------------|---------|-----------|
-| `server.port` | 8081 | Port backend |
-| `spring.datasource.url` | jdbc:mysql://localhost:3306/inventory_app?... | URL MySQL |
-| `app.cors.allowed-origins` | http://localhost:5174, http://192.168.1.2:5174, ... | CORS (πρόσθεσε production domain) |
-| `jwt.secret` | (μήκος ≥32) | Αλλάξτε σε production |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `server.port` | 8081 | Backend port |
+| `spring.datasource.url` | jdbc:mysql://localhost:3306/inventory_app?... | MySQL URL |
+| `app.cors.allowed-origins` | http://localhost:5174, http://192.168.1.2:5174, ... | CORS (add your production domain) |
+| `jwt.secret` | (length ≥32) | Change in production |
 | `admin.user` / `admin.password` | admin@inventory.local / admin12 | Demo admin (env: ADMIN_USER, ADMIN_PASSWORD) |
 
 ---
 
 ## Deploy (production)
 
-1. **Βάση:** Δημιούργησε `inventory_app` και ρύθμισε `application.properties` (URL, username, password).
-2. **Backend:** `cd backend`, `.\mvnw.cmd clean package`, `java -jar target/InventoryLogic-0.0.1-SNAPSHOT.jar`. Αλλάξτε `jwt.secret` και demo admin.
-3. **Frontend:** `npm run build`. Σερβίρετε το **frontend/dist/** με nginx/Apache. Ρύθμισε `app.cors.allowed-origins` για το domain του frontend.
-4. **Κινητά:** Χρηστές μπορούν να εγκαταστήσουν την εφαρμογή ως PWA από το URL του frontend.
+1. **Database:** Create `inventory_app` and configure `application.properties` (URL, username, password).
+2. **Backend:** `cd backend`, `.\mvnw.cmd clean package`, `java -jar target/InventoryLogic-0.0.1-SNAPSHOT.jar`. Change `jwt.secret` and demo admin credentials.
+3. **Frontend:** `npm run build`. Serve **frontend/dist/** with nginx/Apache. Set `app.cors.allowed-origins` to the frontend domain.
+4. **Mobile:** Users can install the app as a PWA from the frontend URL.
 
 ---
 
-## Δομή project
+## Project structure
 
 - **backend/** — Spring Boot (Maven)
   - `domain/`: Product, StockMovement, AuditLog, User
   - `dto/`: CreateProductRequest, DashboardStats, ValuationReport, ...
   - `repo/`, `service/`, `web/`: ProductController, DashboardController, ReportController, AuthController
 - **frontend/** — React + Vite + Tailwind, PWA
-  - Σελίδες: Dashboard, Προϊόντα, Αναφορές, Τι να παραγγείλω, Σχετικά, Λεπτομέρεια προϊόντος, Σύνδεση/Εγγραφή
-- **docs/** — Πλάνο αναβάθμισης (π.χ. docs/ΠΛΑΝΟ_ΑΝΑΒΑΘΜΙΣΗΣ.md)
-- **package.json** (ρίζα) — scripts: `build`, `dev`, `install:frontend`
+  - Pages: Dashboard, Products, Reports, What to Order, About, Product Detail, Login/Register
+- **docs/** — Upgrade plan (e.g. docs/ΠΛΑΝΟ_ΑΝΑΒΑΘΜΙΣΗΣ.md)
+- **package.json** (root) — scripts: `build`, `dev`, `install:frontend`
 
 ---
 
 ## GitHub
 
-Το repository και οι οδηγίες για δημιουργία/σύνδεση και push: **[GITHUB.md](GITHUB.md)**.
+Repository and instructions for creating/connecting and pushing: **[GITHUB.md](GITHUB.md)**.
